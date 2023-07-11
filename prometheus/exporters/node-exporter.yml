@@ -13,9 +13,9 @@ services:
     restart: unless-stopped
     volumes:
       - '/:/host:ro,rslave'
-    network:
+    networks:
       - "prometheus-network"
-      
+
 networks:
   prometheus-network:
     name: prometheus-network
