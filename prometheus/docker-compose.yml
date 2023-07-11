@@ -32,29 +32,29 @@ services:
     networks:
       - monitoring-network
 
+cadvisor:
+  image: gcr.io/cadvisor/cadvisor:latest    
+  container_name: cadvisor
+  #ports:
+  #  - 9080:8080
+  volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:ro
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    - /dev/disk/:/dev/disk:ro
+  devices:
+    - /dev/kmsg
+  privileged: true
+  restart: unless-stopped
+  networks:
+    - monitoring-network
+
 networks:
   monitoring-network:
     external: true
     name: monitoring-network
 
-# cadvsior keeps exiting with code 255
-  # cadvisor:
-  #   image: gcr.io/cadvisor/cadvisor:latest    
-  #   container_name: cadvisor
-  #   ports:
-  #     - 9080:8080
-  #   network_mode: host
-  #   volumes:
-  #     - /:/rootfs:ro
-  #     - /var/run:/var/run:ro
-  #     - /sys:/sys:ro
-  #     - /var/lib/docker/:/var/lib/docker:ro
-  #     - /dev/disk/:/dev/disk:ro
-  #   devices:
-  #     - /dev/kmsg
-  #   privileged: true
-  #   restart: unless-stopped
-
-volumes:
+  volumes:
   prometheus-data:
     driver: local
