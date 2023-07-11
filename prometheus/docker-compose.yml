@@ -11,8 +11,7 @@ services:
       - prometheus-data:/prometheus
     command: "--config.file=/etc/prometheus/prometheus.yml"
     restart: unless-stopped
-    networks:
-      - prometheus
+
 
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
@@ -24,8 +23,7 @@ services:
     restart: unless-stopped
     volumes:
       - '/:/host:ro,rslave'
-    networks:
-      - prometheus
+
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest    
@@ -43,12 +41,7 @@ services:
       - /dev/kmsg
     privileged: true
     restart: unless-stopped
-    networks:
-      - prometheus
 
 volumes:
   prometheus-data:
     driver: local
-
-networks:
-  prometheus:
