@@ -30,11 +30,12 @@ services:
     expose:
       - 9100
     networks:
-      - monitoring
+      - monitoring-network
 
 networks:
-  monitoring:
-    driver: bridge
+  monitoring-network:
+    external: true
+    name: monitoring-network
 
 # cadvsior keeps exiting with code 255
   # cadvisor:
