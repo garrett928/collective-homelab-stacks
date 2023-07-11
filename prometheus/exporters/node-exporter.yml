@@ -14,9 +14,9 @@ services:
     volumes:
       - '/:/host:ro,rslave'
     networks:
-      - "prometheus-network"
+      - "prometheus_prometheus-network"
 
 networks:
-  prometheus-network:
-    name: prometheus-network
+  prometheus_sprometheus-network:
+    name: prometheus_prometheus-network
     external: true
