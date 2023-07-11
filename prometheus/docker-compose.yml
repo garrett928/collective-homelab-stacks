@@ -11,6 +11,12 @@ services:
       - prometheus-data:/prometheus
     command: "--config.file=/etc/prometheus/prometheus.yml"
     restart: unless-stopped
+    networks:
+      - prometheus-network
+
 volumes:
   prometheus-data:
     driver: local
+
+networks:
+  prometheus-network:
