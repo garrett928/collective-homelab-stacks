@@ -24,23 +24,23 @@ services:
     volumes:
       - '/:/host:ro,rslave'
 
-
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest    
-    container_name: cadvisor
-    ports:
-      - 9080:8080
-    network_mode: host
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    devices:
-      - /dev/kmsg
-    privileged: true
-    restart: unless-stopped
+# cadvsior keeps exiting with code 255
+  # cadvisor:
+  #   image: gcr.io/cadvisor/cadvisor:latest    
+  #   container_name: cadvisor
+  #   ports:
+  #     - 9080:8080
+  #   network_mode: host
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:ro
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
+  #     - /dev/disk/:/dev/disk:ro
+  #   devices:
+  #     - /dev/kmsg
+  #   privileged: true
+  #   restart: unless-stopped
 
 volumes:
   prometheus-data:
