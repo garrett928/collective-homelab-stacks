@@ -17,6 +17,6 @@ services:
       - "prometheus_prometheus-network"
 
 networks:
-  prometheus_sprometheus-network:
+  prometheus_prometheus-network:
     name: prometheus_prometheus-network
     external: true
