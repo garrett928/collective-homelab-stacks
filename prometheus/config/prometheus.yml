@@ -19,8 +19,8 @@ scrape_configs:
   # Example job for node_exporter
   - job_name: 'node_exporter'
     static_configs:
-      - targets: ['localhost:9100']
-
+      - targets: ['node-exporter:9100']
+      
   # Example job for cadvisor
   #- job_name: 'cadvisor'
   #  static_configs:
