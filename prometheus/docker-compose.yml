@@ -12,7 +12,7 @@ services:
     command: "--config.file=/etc/prometheus/prometheus.yml"
     restart: unless-stopped
     networks:
-      - monitoring
+      - monitoring-network
 
   node-exporter:
     image: prom/node-exporter:latest
