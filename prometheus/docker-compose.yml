@@ -1,6 +1,4 @@
-volumes:
-  prometheus-data:
-    driver: local
+version: '3'
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -13,3 +11,6 @@ services:
       - prometheus-data:/prometheus
     command: "--config.file=/etc/prometheus/prometheus.yml"
     restart: unless-stopped
+volumes:
+  prometheus-data:
+    driver: local
