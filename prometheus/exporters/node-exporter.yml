@@ -1,5 +1,8 @@
 # this is the node exporter
 # https://github.com/prometheus/node_exporter
+
+# NOTE: this file is not used right now
+
 version: '3.8'
 
 services:
