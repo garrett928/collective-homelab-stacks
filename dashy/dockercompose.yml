@@ -7,7 +7,7 @@ services:
     container_name: Dashy
     # Pass in your config file below, by specifying the path on your host machine
     # volumes:
-      - dashy-config:/app/public/
+      - ./dash.yml:/app/public/
     ports:
       - 4000:80
     # Set any environmental variables
@@ -25,5 +25,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
 volumes:
   - dashy-data
