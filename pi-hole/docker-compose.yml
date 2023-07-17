@@ -27,8 +27,14 @@ services:
     dns:
       - 127.0.0.1
       - 1.1.1.1
+    networks:
+      - pihole
 
 volumes:
   pi-hole-etc:
   pi-hole-data:
   pi-hole-dnsmasq:
+
+networks:
+  pihole:
+
