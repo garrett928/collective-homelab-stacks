@@ -28,7 +28,7 @@ services:
       - 127.0.0.1
       - 1.1.1.1
     networks:
-      - pi-hole
+      - host
 
 volumes:
   pi-hole-etc:
@@ -36,7 +36,7 @@ volumes:
   pi-hole-dnsmasq:
 
 networks:
-  pi-hole:
-    name: pi-hole
-    driver: host
+  host:
+    name: host
+    external: true
 
