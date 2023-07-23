@@ -37,7 +37,6 @@ volumes:
 
 networks:
   pi-hole:
-    external: true
     name: pi-hole
     driver: host
 
