@@ -28,7 +28,7 @@ services:
       - 127.0.0.1
       - 1.1.1.1
     networks:
-      - pi-hole-macvlan
+      - pi-hole
 
 volumes:
   pi-hole-etc:
@@ -36,7 +36,8 @@ volumes:
   pi-hole-dnsmasq:
 
 networks:
-  pi-hole-macvlan:
+  pi-hole:
     external: true
-    name: pi-hole-macvlan
+    name: pi-hole
+    driver: host
 
