@@ -1,18 +1,18 @@
-version: "3"
 
+version: "3"
 # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
 services:
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
     # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
-    # ports:
-      # - "53:53/tcp"
-      # - "53:53/udp"
-      # - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
-      # - "8070:80/tcp"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
+      - "8070:80/tcp"
     environment:
-      TZ: 'America/Denver'
+      TZ: 'America/Chicago'
       # WEBPASSWORD: 'see readme for changing password'
       PIHOLE_BASE: "/opt/pihole-storage"
     # Volumes store your data between container upgrades
@@ -28,7 +28,7 @@ services:
       - 127.0.0.1
       - 1.1.1.1
     networks:
-      - host
+      - pihole
 
 volumes:
   pi-hole-etc:
@@ -36,7 +36,4 @@ volumes:
   pi-hole-dnsmasq:
 
 networks:
-  host:
-    name: host
-    external: true
-
+  pihole:
