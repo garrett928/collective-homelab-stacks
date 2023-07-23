@@ -14,7 +14,7 @@ services:
     networks:
       - monitoring-network
 
-  networks:
-    monitoring-network:
-      external: true
-      name: monitoring-network
+networks:
+  monitoring-network:
+    external: true
+    name: monitoring-network
