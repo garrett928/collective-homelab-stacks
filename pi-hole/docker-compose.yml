@@ -12,7 +12,7 @@ services:
       # - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
       # - "8070:80/tcp"
     environment:
-      TZ: 'America/Chicago'
+      TZ: 'America/Denver'
       # WEBPASSWORD: 'see readme for changing password'
       PIHOLE_BASE: "/opt/pihole-storage"
     # Volumes store your data between container upgrades
