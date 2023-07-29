@@ -1,5 +1,5 @@
-version: "3"
 
+version: "3"
 # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
 services:
   pihole:
@@ -28,7 +28,7 @@ services:
       - 127.0.0.1
       - 1.1.1.1
     networks:
-      - pi-hole-macvlan
+      - pihole
 
 volumes:
   pi-hole-etc:
@@ -36,7 +36,4 @@ volumes:
   pi-hole-dnsmasq:
 
 networks:
-  pi-hole-macvlan:
-    external: true
-    name: pi-hole-macvlan
-
+  pihole:
