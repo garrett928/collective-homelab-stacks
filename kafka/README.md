@@ -9,3 +9,6 @@ Exec into the pod and you can use these commands to test.
 `/bin/kafka-console-consumer --topic topic-name --from-beginning --bootstrap-server localhost:9092`  
 `/bin/kafka-console-producer --topic topic-name --bootstrap-server localhost:9092 `  
 Note: do this from another shell
+
+# portainer mount
+Had to put a portainer relative mount with the path `/home/garrett/portainer-compose-unpacker`
