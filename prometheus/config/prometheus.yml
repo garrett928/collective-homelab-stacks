@@ -35,3 +35,6 @@ scrape_configs:
     # basic_auth: # Only needed if authentication is enabled (default) 
       # username: <your user>
       # password: <your password>
+
+  - job_name: 'kafka0'
+    - targets: ['kafka1:11001']
