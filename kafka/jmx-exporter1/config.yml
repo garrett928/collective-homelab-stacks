@@ -93,11 +93,11 @@ rules:
     labels:
       "$4": "$5"
       quantile: "0.$6"
-  - pattern: kafka.(\w+)<type=(.+), name=(.+)><>Count
-    name: kafka_$1_$2_$3_count
-    type: COUNTER
   - pattern: kafka.(\w+)<type=(.+), name=(.+)><>(\d+)thPercentile
     name: kafka_$1_$2_$3
     type: GAUGE
     labels:
-      quantile: "0.$4"	
+      quantile: "0.$4"
+  - pattern: kafka.(\w+)<type=(.+), name=(.+)><>Count
+      name: kafka_$1_$2_$3_count
+      type: COUNTER
