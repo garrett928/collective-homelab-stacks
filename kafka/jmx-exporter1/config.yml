@@ -98,6 +98,6 @@ rules:
     type: GAUGE
     labels:
       quantile: "0.$4"
-  - pattern: kafka.(\w+)<type=(.+), name=(.+)><>Count
-      name: kafka_$1_$2_$3_count
-      type: COUNTER
+  # - pattern: kafka.(\w+)<type=(.+), name=(.+)><>Count
+  #     name: kafka_$1_$2_$3_count
+  #     type: COUNTER
