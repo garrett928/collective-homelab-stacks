@@ -1,8 +1,7 @@
 version: "3"
 
 volumes:
-  zookeeper-data:
-  zookeeper-logs:
+  control-center-data:
 
 networks:
   kafka-network:
@@ -25,4 +24,6 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT' 
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER' 
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk' 
+
+
       
