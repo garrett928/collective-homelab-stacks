@@ -4,7 +4,7 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     ports:
-      - "9090:9090"
+      - "1090:9090"
     volumes:
          # portainer includes the ./config/prometheus.yml so this mount works
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
