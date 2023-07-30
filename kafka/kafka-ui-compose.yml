@@ -57,6 +57,7 @@ services:
       - ./jmx-exporter0:/usr/share/jmx_exporter/
     networks:
       - kafka-network
+      - monitoring-network
 
   kafka1:
     image: confluentinc/cp-kafka:7.4.1
@@ -87,6 +88,7 @@ services:
       - ./jmx-exporter1:/usr/share/jmx_exporter/
     networks:
       - kafka-network
+      - monitoring-network
 
  
   schemaregistry0:
@@ -137,4 +139,7 @@ volumes:
   kui-config:
 
 networks:
+  monitoring-network:
+    external: true
+    name: monitoring-network
   kafka-network:
