@@ -37,4 +37,6 @@ scrape_configs:
       # password: <your password>
 
   - job_name: 'kafka'
-    - targets: ['kafka1:11001', 'kafka0:11001']
+    metrics_path: '/'
+    static_configs:
+      - targets: ['kafka1:11001', 'kafka0:11001']
