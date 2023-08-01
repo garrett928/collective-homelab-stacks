@@ -1,0 +1,42 @@
+# Run Monica with apache backend
+
+version: "3.9"
+
+services:
+  app:
+    image: monica
+    depends_on:
+      - db
+    ports:
+      - 8085:80
+    environment:
+      # - APP_ENV=production
+      - APP_KEY=YtXD7J5VovHNFb3RyuSdsEUeq8UxRCrP
+      - DB_HOST=db
+      - DB_DATABASE=monica
+      - DB_USERNAME=monica
+      - DB_PASSWORD=secret
+      - LOG_CHANNEL=stderr
+      - CACHE_DRIVER=database
+      - SESSION_DRIVER=database
+      - QUEUE_DRIVER=sync
+    volumes:
+      - data2:/var/www/html/storage
+    restart: always
+
+  db:
+    image: mysql
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=true
+      - MYSQL_DATABASE=monica
+      - MYSQL_USER=monica
+      - MYSQL_PASSWORD=secret
+    volumes:
+      - mysql1:/var/lib/mysql
+    restart: always
+
+volumes:
+  data2:
+    name: data2
+  mysql1:
+    name: mysql1
