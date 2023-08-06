@@ -21,8 +21,10 @@ services:
       - SESSION_DRIVER=database
       - QUEUE_DRIVER=sync
     volumes:
-      - data2:/var/www/html/storage
+      - data3:/var/www/html/storage
     restart: always
+    networks:
+      - monica
 
   db:
     image: mysql
@@ -32,11 +34,16 @@ services:
       - MYSQL_USER=monica
       - MYSQL_PASSWORD=secret
     volumes:
-      - mysql1:/var/lib/mysql
+      - mysql3:/var/lib/mysql
     restart: always
+    networks:
+      - monica
 
 volumes:
-  data2:
-    name: data2
-  mysql1:
-    name: mysql1
+  data3:
+    name: data3
+  mysql3:
+    name: mysql3
+
+networks:
+  monica:
