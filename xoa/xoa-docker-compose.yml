@@ -6,7 +6,7 @@ services:
         container_name: xen-orchestra
         stop_grace_period: 1m
         ports:
-            - "8085:80"
+            - "8089:80"
             - "4443:443"
         environment:
             - HTTP_PORT=80
