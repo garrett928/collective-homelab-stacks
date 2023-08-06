@@ -4,8 +4,8 @@ Automation with ansible
 # Links
 
  - [ansible docs](https://docs.ansible.com/ansible/latest/getting_started/index.html)
- - [dnf module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/dnf_module.html) - for installing packeges and upgrading the system
-
+ - [dnf module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/dnf_module.html) - for installing packeges and upgrading the system  
+ - [ssh key module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/authorized_key_module.html)
  # Commands
 
  - `ansible all --list-hosts -i ./host-inventory.ini`  
