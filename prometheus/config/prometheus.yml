@@ -40,3 +40,11 @@ scrape_configs:
     metrics_path: '/'
     static_configs:
       - targets: ['kafka1:11001', 'kafka0:11001']
+
+    - job_name: xenserver
+      scrape_interval: 30s
+      scrape_timeout: 20s
+      static_configs:
+      - targets:
+        - xcp-dell:9100
+
