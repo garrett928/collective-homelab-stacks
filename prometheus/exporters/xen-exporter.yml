@@ -1,0 +1,16 @@
+version: '2.4'
+services:
+  xcp-dell:
+    container_name: xcp-dell
+    image: ghcr.io/mikedombo/xen-exporter:latest
+    environment:
+      - XEN_HOST=10.10.10.101
+      - XEN_USER=root
+      - XEN_SSL_VERIFY=false
+    networks:
+      - "prometheus_prometheus-network"
+    
+networks:
+  prometheus_prometheus-network:
+    name: prometheus_prometheus-network
+    external: true
