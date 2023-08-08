@@ -4,7 +4,7 @@ services:
     container_name: xcp-dell
     image: ghcr.io/mikedombo/xen-exporter:latest
     environment:
-      - XEN_HOST=10.10.10.101
+      - XEN_HOST=10.0.0.105
       - XEN_USER=root
       - XEN_SSL_VERIFY=false
     networks:
