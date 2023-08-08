@@ -8,9 +8,9 @@ services:
       - XEN_USER=root
       - XEN_SSL_VERIFY=false
     networks:
-      - "prometheus_prometheus-network"
+      - "monitoring-network"
     
 networks:
   prometheus_prometheus-network:
-    name: prometheus_prometheus-network
+    name: monitoring-network
     external: true
