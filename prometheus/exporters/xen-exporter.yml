@@ -11,6 +11,6 @@ services:
       - "monitoring-network"
     
 networks:
-  prometheus_prometheus-network:
+  monitoring-network:
     name: monitoring-network
     external: true
