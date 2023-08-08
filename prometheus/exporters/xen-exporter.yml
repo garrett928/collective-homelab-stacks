@@ -7,8 +7,11 @@ services:
       - XEN_HOST=10.0.0.105
       - XEN_USER=root
       - XEN_SSL_VERIFY=false
+      # - XEN_PASSWORD="DEFINED IN PORTAINER"
     networks:
       - "monitoring-network"
+    env_file:
+      - stack.env # Defined by portainer. Will need to comment out if run locally
     
 networks:
   monitoring-network:
