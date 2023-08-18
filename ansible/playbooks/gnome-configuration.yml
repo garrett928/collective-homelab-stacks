@@ -1,0 +1,8 @@
+- hosts: localhost
+  connection: local
+  tasks: 
+    - name: Enable Dark Mode
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/color-scheme"
+        value: "'prefer-dark'"
+
