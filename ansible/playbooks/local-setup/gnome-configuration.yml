@@ -1,13 +1,43 @@
 - hosts: localhost
   connection: local
   tasks: 
+
+# DARK MODE
+
     - name: Enable Dark Mode
       community.general.dconf:
         key: "/org/gnome/desktop/interface/color-scheme"
         value: "'prefer-dark'"
 
+# MINIMIZE BUTTON
+
     - name: Add minimize button
       community.general.dconf:
         key: /org/gnome/desktop/wm/preferences/button-layout
         value: "'close,minimize,maximize:'"
+
+# ALT-TAB
+# https://superuser.com/questions/394376/how-to-prevent-gnome-shells-alttab-from-grouping-windows-from-similar-apps
+
+    - name: Don't group windows on alt-tab - remove old bindings
+      community.general.dconf:
+        key: "/org/gnome/desktop/wm/keybindings/switch-applications"
+        value: '[]'
+
+    - name: Don't group windows on alt-tab - add new alt-tab
+      community.general.dconf:
+        key: "/org/gnome/desktop/wm/keybindings/switch-windows"
+        value: ['<Alt>Tab']
+
+    - name: Don't group windows on alt-tab - add new shift-alt-tab
+      community.general.dconf:
+        key: "/org/gnome/desktop/wm/keybindings/switch-windows-backward"
+        value: ['<Shift><Alt>Tab']
+
+# SHOW DESKTOP
+
+    - name: Minimize all apps super-d (show desktop)
+      community.general.dconf:
+        key: "/org/gnome/desktop/wm/keybindings/show-desktop"
+        value: ['<Super>d']
 
