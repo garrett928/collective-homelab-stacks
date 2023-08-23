@@ -6,3 +6,8 @@
         key: "/org/gnome/desktop/interface/color-scheme"
         value: "'prefer-dark'"
 
+    - name: Add minimize button
+      community.general.dconf:
+        key: /org/gnome/desktop/wm/preferences/button-layout
+        value: "'close,minimize,maximize:'"
+
