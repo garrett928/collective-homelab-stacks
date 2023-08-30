@@ -1,0 +1,31 @@
+# adapted from: https://itsfoss.com/install-discord-fedora/
+
+- hosts: localhost
+  connection: local
+  become: yes
+  tasks: 
+    - name: Find the version of fedora
+      ansible.builtin.shell: rpm -E %fedora
+      register: version
+
+    - name: remove old Discord if present
+      ansible.builtin.dnf:
+        name: discord
+        state: absent
+
+    - name: Install non-free RPM repo
+      ansible.builtin.dnf:
+        name: 'https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-38.noarch.rpm'
+        state: present
+
+    - name: Upgrade all packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+
+    - name: Install Discord
+      ansible.builtin.dnf:
+        name: discord
+        state: latest
+
+    
