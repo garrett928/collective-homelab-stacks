@@ -10,11 +10,12 @@
         value: "'prefer-dark'"
 
 # MINIMIZE BUTTON
-
+    # https://gnomeshell.wordpress.com/2011/09/10/change-the-window-title-buttons/
+    # this link shows how to position the buttons
     - name: Add minimize button
       community.general.dconf:
         key: /org/gnome/desktop/wm/preferences/button-layout
-        value: "'close,minimize,maximize:'"
+        value: "'menu:minimize,maximize,close'"
 
 # ALT-TAB
 # https://superuser.com/questions/394376/how-to-prevent-gnome-shells-alttab-from-grouping-windows-from-similar-apps
@@ -41,3 +42,9 @@
         key: "/org/gnome/desktop/wm/keybindings/show-desktop"
         value: ['<Super>d']
 
+# screenshot binding
+
+    - name: Screenshot binding to Super-Shift-s
+      community.general.dconf:
+        key: "/org/gnome/shell/keybindings/show-screenshot-ui"
+        value: ['<Super><Shift>S']
