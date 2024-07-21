@@ -1,16 +1,28 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: echo-ingress
+  name: hello-kubernetes-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
 spec:
   rules:
-  - host: home.ghart.space
+  - host: "home.ghart.space"
     http:
-        paths:
-        - pathType: Prefix
-          path: "/"
-          backend:
-            service:
-              name: echo1
-              port:
-                number: 80
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: hello-kubernetes-first
+            port:
+              number: 80
+  - host: "ghart.space"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: hello-kubernetes-first
+            port:
+              number: 80
