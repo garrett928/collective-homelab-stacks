@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bpsk-svc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 5000
+  selector:
+    app: bpsk
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bpsk
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bpsk
+  template:
+    metadata:
+      labels:
+        app: bpsk
+    spec:
+      containers:
+      - name: bpsk
+        image: registry.digitalocean.com/containers-repo/bpsk
+        ports:
+        - containerPort: 5000
