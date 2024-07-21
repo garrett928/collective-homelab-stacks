@@ -3,9 +3,9 @@ kind: Ingress
 metadata:
   name: hello-kubernetes-ingress
   annotations:
+    kubernetes.io/ingress.class: nginx
   #   # cert-manager.io/cluster-issuer: "letsencrypt-staging"
   #   cert-manager.io/cluster-issuer: "letsencrypt-staging"
-    kubernetes.io/ingress.class: nginx
 spec:
 # tls not working right now
   # tls:
