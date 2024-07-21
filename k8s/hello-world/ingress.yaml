@@ -11,7 +11,7 @@ spec:
   - hosts:
     - home.ghart.space
     # - ghart.space
-    secretName: hello-tls
+    secretName: home-ghart-space-cert
   rules:
   - host: "home.ghart.space"
     http:
