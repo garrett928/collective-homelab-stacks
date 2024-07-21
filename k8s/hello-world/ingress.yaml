@@ -11,6 +11,6 @@ spec:
           path: "/"
           backend:
             service:
-              name: echo1
+              name: hello-kubernetes-first
               port:
                 number: 80
