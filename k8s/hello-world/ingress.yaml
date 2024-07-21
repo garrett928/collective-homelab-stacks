@@ -2,10 +2,10 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-kubernetes-ingress
-  annotations:
-    # cert-manager.io/cluster-issuer: "letsencrypt-staging"
-    cert-manager.io/cluster-issuer: "letsencrypt-staging"
-    kubernetes.io/ingress.class: nginx
+  # annotations:
+  #   # cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  #   cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  #   kubernetes.io/ingress.class: nginx
 spec:
 # tls not working right now
   # tls:
