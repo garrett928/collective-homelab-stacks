@@ -7,11 +7,12 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-staging"
     kubernetes.io/ingress.class: nginx
 spec:
-  tls:
-  - hosts:
-    - home.ghart.space
-    # - ghart.space
-    secretName: home-ghart-space-cert-staging
+# tls not working right now
+  # tls:
+  # - hosts:
+  #   - home.ghart.space
+  #   # - ghart.space
+  #   secretName: home-ghart-space-cert-staging
   rules:
   - host: "home.ghart.space"
     http:
