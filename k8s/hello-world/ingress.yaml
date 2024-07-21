@@ -2,10 +2,10 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-kubernetes-ingress
-  # annotations:
+  annotations:
   #   # cert-manager.io/cluster-issuer: "letsencrypt-staging"
   #   cert-manager.io/cluster-issuer: "letsencrypt-staging"
-  #   kubernetes.io/ingress.class: nginx
+    kubernetes.io/ingress.class: nginx
 spec:
 # tls not working right now
   # tls:
@@ -14,17 +14,7 @@ spec:
   #   # - ghart.space
   #   secretName: home-ghart-space-cert-staging
   rules:
-  - host: "home.ghart.space"
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: hello-kubernetes-first
-            port:
-              number: 80
-  - host: "ghart.space"
+  - host: "hello.ghart.space"
     http:
       paths:
       - pathType: Prefix
