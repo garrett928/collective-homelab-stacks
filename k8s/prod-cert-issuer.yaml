@@ -4,6 +4,7 @@ metadata:
   name: letsencrypt-prod
   namespace: cert-manager
 spec:
+#from digital ocean ingress nginx with cert manager tutorial
   acme:
     # The ACME server URL
     server: https://acme-v02.api.letsencrypt.org/directory
