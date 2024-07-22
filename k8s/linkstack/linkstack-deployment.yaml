@@ -23,9 +23,6 @@ spec:
         io.kompose.service: linkstack
     spec:
       containers:
-        - env:
-            - name: HTTP_SERVER_NAME
-              value: ghart.space
           image: linkstackorg/linkstack:latest
           name: linkstack
           ports:
