@@ -2,7 +2,7 @@
 
 - hosts: "*"
   become: yes
-  remote_user: ghart 
+  remote_user: boptart 
   tasks: 
   - name: Set authorized keys taken from github
     ansible.posix.authorized_key:

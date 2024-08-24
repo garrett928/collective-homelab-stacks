@@ -1,7 +1,7 @@
 - hosts: "*"
   become: yes
   tasks:
-    - name: Install the latest version of Apache
+    - name: Install common dnf packages
       ansible.builtin.dnf:
         name: vim
         name: git
