@@ -1,0 +1,27 @@
+---
+- name: Install Portainer on Node
+  hosts: ubuntu-server-24.04
+  # remote_user: boptart
+  become: true
+  vars:
+    # the portainer compose file exist at 
+    # 
+    homelab-repo: "collective-homelab-stacks" 
+    portainer-path: "/portainer"
+    # container_count: 4
+
+  tasks:
+    - name: Creating directory at /home/{{ansible_user}}/ansible
+      ansible.builtin.file:
+        path: /home/{{ansible_user}}/ansible
+        state: directory
+        mode: '0755'
+
+    - name: Checkout homelab git repo
+      ansible.builtin.git:
+        repo: 'https://github.com/garrett928/collective-homelab-stacks.git'
+        dest: /home/{{ansible_user}}/ansible/collective-homelab-stacks
+        update: yes
+
+    - name: Start portainer with docker compose
+      command: "cd /home/{{ansible_user}}/ansible/collective-homelab-stacks/portainer/ && docker compose up -d"
