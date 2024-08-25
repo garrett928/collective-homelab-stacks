@@ -44,7 +44,6 @@ services:
         - "traefik.http.routers.dashy-secure.tls=true"
         - "traefik.http.routers.dashy-secure.service=dashy"
         - "traefik.http.services.dashy.loadbalancer.server.port=80"
-        - "traefik.docker.network=traefik-proxy"
 # found these in the discussions for dashy
         - "traefik.http.middlewares.sslHeader.headers.customRequestHeaders.X-Forwarded-Proto=https"
         - "traefik.http.middlewares.testHeader.headers.accessControlAllowMethods=GET,OPTIONS,PUT"
