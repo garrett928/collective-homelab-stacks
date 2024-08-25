@@ -9,8 +9,8 @@ services:
     volumes:
       - dashy-data:/app/public
       # - ./dashy.yml:/app/public/config.yml
-    ports:
-      - 4000:80
+    # ports:
+    #   - 4000:80
     # Set any environmental variables
     environment:
       - NODE_ENV=production
@@ -31,7 +31,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.dashy.rule=Host(`dashy.ghart.space`)"
       - "traefik.http.routers.dashy.entrypoints=websecure"
-      - "traefik.http.services.dashy.loadbalancer.server.port=4000"
+      - "traefik.http.services.dashy.loadbalancer.server.port=80"
       - "traefik.http.routers.dashy.service=dashy"
       - "traefik.http.routers.dashy.tls.certresolver=leresolver"
 
