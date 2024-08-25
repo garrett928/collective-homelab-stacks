@@ -18,6 +18,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    networks:
+      - treafik-network
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./acme.json:/acme.json"
@@ -31,6 +33,8 @@ services:
     image: portainer/portainer-ee:latest
     command: -H unix:///var/run/docker.sock
     restart: always
+    networks:
+      - treafik-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
@@ -49,7 +53,11 @@ services:
       - "traefik.http.services.edge.loadbalancer.server.port=8000"
       - "traefik.http.routers.edge.service=edge"
       - "traefik.http.routers.edge.tls.certresolver=leresolver"
-
-
 volumes:
   portainer_data:
+
+
+networks:
+  monitoring-network:
+    external: true
+    name: treafik-network

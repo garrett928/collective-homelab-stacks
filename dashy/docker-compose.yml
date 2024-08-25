@@ -19,6 +19,8 @@ services:
     #  - GID=1000
     # Specify restart policy
     restart: unless-stopped
+    networks:
+      - treafik-network
     # Configure healthchecks
     healthcheck:
       test: ['CMD', 'node', '/app/services/healthcheck']
@@ -42,3 +44,8 @@ services:
         - "traefik.http.services.dashy.loadbalancer.server.port=8080"
 volumes:
   dashy-data:
+
+networks:
+  monitoring-network:
+    external: true
+    name: monitoring-network
