@@ -41,6 +41,6 @@ volumes:
   dashy-data:
 
 networks:
-  monitoring-network:
+  treafik-network:
     external: true
-    name: monitoring-network
+    name: treafik-network

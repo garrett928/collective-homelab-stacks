@@ -58,6 +58,6 @@ volumes:
 
 
 networks:
-  monitoring-network:
+  treafik-network:
     external: true
     name: treafik-network
