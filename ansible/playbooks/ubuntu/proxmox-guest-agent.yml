@@ -1,0 +1,13 @@
+---
+- name: Install Quemu Guest Agent on Ubutu 24.04 hosts
+  hosts: ubuntu-server-24.04
+  become: true
+  vars:
+    # container_count: 4
+
+  tasks:
+    - name: Install qemu guest agent
+      apt:
+        name: qemu-guest-agent
+        state: latest
+        update_cache: true
