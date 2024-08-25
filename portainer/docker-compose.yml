@@ -5,7 +5,7 @@ version: "3.3"
 services:
   traefik:
     container_name: traefik
-    image: "traefik:v2.2.8"
+    image: "traefik:latest"
     command:
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
@@ -28,7 +28,7 @@ services:
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce:2.0.0
     command: -H unix:///var/run/docker.sock
     restart: always
     volumes:
