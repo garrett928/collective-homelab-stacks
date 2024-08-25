@@ -30,18 +30,13 @@ services:
       start_period: 40s
     labels:
       # Frontend
-      # - "traefik.enable=true"
-      # - "traefik.http.routers.dashy.rule=Host(`dashy.ghart.space`)"
-      # - "traefik.http.routers.dashy.entrypoints=websecure"
-      # - "traefik.http.services.dashy.loadbalancer.server.port=8080"
-      # - "traefik.http.routers.dashy.service=dashy"
-      # - "traefik.http.routers.dashy.tls.certresolver=leresolver"
-        - "traefik.enable=true"
-        - "traefik.http.services.dashy.loadbalancer.server.port=80"
-        - "traefik.http.routers.dashy.entrypoints=https"
-        - "traefik.http.routers.dashy.rule=Host(`dashy.ghart.space`)"
-        - "traefik.http.routers.dashy.service=dashy"
-        - "traefik.http.services.dashy.loadbalancer.server.port=8080"
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashy.rule=Host(`dashy.ghart.space`)"
+      - "traefik.http.routers.dashy.entrypoints=websecure"
+      - "traefik.http.services.dashy.loadbalancer.server.port=8080"
+      - "traefik.http.routers.dashy.service=dashy"
+      - "traefik.http.routers.dashy.tls.certresolver=leresolver"
+      - "traefik.docker.network=treafik-network"
 volumes:
   dashy-data:
 
