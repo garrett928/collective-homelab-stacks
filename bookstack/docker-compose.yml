@@ -30,7 +30,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.bookstack.rule=Host(`bookstack.ghart.space`)"
       - "traefik.http.routers.bookstack.entrypoints=websecure"
-      - "traefik.http.services.bookstack.loadbalancer.server.port=6875"
+      - "traefik.http.services.bookstack.loadbalancer.server.port=80"
       - "traefik.http.routers.bookstack.service=bookstack"
       - "traefik.http.routers.bookstack.tls.certresolver=leresolver"
       - "traefik.docker.network=treafik-network"
