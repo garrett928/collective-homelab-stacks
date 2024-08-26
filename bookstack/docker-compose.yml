@@ -1,0 +1,58 @@
+---
+# https://www.bookstackapp.com/docs/admin/installation/
+services:
+  bookstack:
+    image: lscr.io/linuxserver/bookstack
+    container_name: bookstack
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Indiana/Indianapolis
+      - APP_URL=https://bookstack.ghart.space
+      - DB_HOST=bookstack_db
+      - DB_PORT=3306
+      - DB_USER=bookstack
+      - DB_PASS=db-pass
+      - DB_DATABASE=bookstackapp
+    volumes:
+      - bookstack-data:/config
+    # ports:
+    #   - 6875:80
+    networks:
+      - treafik-network
+    restart: unless-stopped
+    depends_on:
+      - bookstack_db
+    labels:
+      # Frontend
+      - "traefik.enable=true"
+      - "traefik.http.routers.bookstack.rule=Host(`bookstack.ghart.space`)"
+      - "traefik.http.routers.bookstack.entrypoints=websecure"
+      - "traefik.http.services.bookstack.loadbalancer.server.port=6875"
+      - "traefik.http.routers.bookstack.service=bookstack"
+      - "traefik.http.routers.bookstack.tls.certresolver=leresolver"
+      - "traefik.docker.network=treafik-network"
+
+  bookstack_db:
+    image: lscr.io/linuxserver/mariadb
+    container_name: bookstack_db
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Indiana/Indianapolis
+      - MYSQL_ROOT_PASSWORD=db-pass
+      - MYSQL_DATABASE=bookstackapp
+      - MYSQL_USER=bookstack
+      - MYSQL_PASSWORD=db-pass
+    volumes:
+      - bookstack-db-data:/config
+    restart: unless-stopped
+
+volumes:
+  bookstack-db-data:
+  bookstack-data:
+
+networks:
+  treafik-network:
+    external: true
+    name: treafik-network
