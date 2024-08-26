@@ -20,6 +20,8 @@ services:
     #   - 6875:80
     networks:
       - treafik-network
+      - bookstack
+
     restart: unless-stopped
     depends_on:
       - bookstack_db
@@ -47,6 +49,9 @@ services:
     volumes:
       - bookstack-db-data:/config
     restart: unless-stopped
+    networks:
+      - treafik-network
+      - bookstack
 
 volumes:
   bookstack-db-data:
@@ -56,3 +61,4 @@ networks:
   treafik-network:
     external: true
     name: treafik-network
+  bookstack:
