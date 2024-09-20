@@ -6,6 +6,7 @@ services:
   traefik:
     container_name: traefik
     image: "traefik:latest"
+    restart: always
     command:
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
