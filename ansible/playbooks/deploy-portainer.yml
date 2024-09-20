@@ -28,11 +28,6 @@
         project_src: /home/{{ansible_user}}/ansible/{{homelabRepo}}{{portainerPath}}
         state: absent
 
-    - name: Tear down existing portainer
-      community.docker.docker_compose_v2:
-        project_src: /home/{{ansible_user}}/ansible/{{homelabRepo}}{{portainerPath}}
-        state: absent
-
     - name: Create and start Portainer
       community.docker.docker_compose_v2:
         project_src: /home/{{ansible_user}}/ansible/{{homelabRepo}}{{portainerPath}}
