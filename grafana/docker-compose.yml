@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     networks:
       - monitoring-network
-      - traefik-network
+      - treafik-network
     environment:
       GF_SERVER_ROOT_URL: https://grafana.ghart.space
       GF_SERVER_METRICS_DOMAIN: grafana.ghart.space
@@ -29,6 +29,6 @@ networks:
   monitoring-network:
     external: true
     name: monitoring-network
-  traeafik-network:
+  treafik-network:
     external: true
     name: treafik-network
