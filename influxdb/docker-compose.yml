@@ -37,6 +37,7 @@ services:
 
 volumes:
   influxdb-data:
+  influxdb-config:
 
 networks:
   monitoring-network:
