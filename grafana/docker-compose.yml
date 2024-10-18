@@ -5,15 +5,26 @@ services:
   grafana:
     image: grafana/grafana-oss:latest
     container_name: grafana
-    ports:
-      - "3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
     restart: unless-stopped
     networks:
       - monitoring-network
+      - treafik-network
+    labels:
+      # Frontend
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.ghart.space`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.service=grafana"
+      - "traefik.http.routers.grafana.tls.certresolver=leresolver"
+      - "traefik.docker.network=treafik-network"
 
 networks:
   monitoring-network:
     external: true
     name: monitoring-network
+  treafik-network:
+    external: true
+    name: treafik-network
