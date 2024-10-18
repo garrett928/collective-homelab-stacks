@@ -1,7 +1,7 @@
 services:
   influxdb:
     container_name: influxdb
-    image: influxdb2:latest
+    image: influxdb:latest
     volumes:
       - influxdb-data:/var/lib/influxdb2
       - influxdb-config:/etc/influxdb2
