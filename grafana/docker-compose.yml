@@ -8,14 +8,16 @@ services:
     networks:
       - monitoring-network
       - traefik-network
+    ports:
+      - 3000:3000
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`grafana.ghart.space`)"
-      - "traefik.http.routers.grafana.entrypoints=websecure"
-      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-      - "traefik.http.routers.grafana.service=grafana"
-      - "traefik.http.routers.grafana.tls.certresolver=leresolver"
-      - "traefik.docker.network=traefik-network"
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.grafana.rule=Host(`grafana.ghart.space`)"
+      # - "traefik.http.routers.grafana.entrypoints=websecure"
+      # - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      # - "traefik.http.routers.grafana.service=grafana"
+      # - "traefik.http.routers.grafana.tls.certresolver=leresolver"
+      # - "traefik.docker.network=traefik-network"
 volumes:
   grafana-data:
     driver: local
