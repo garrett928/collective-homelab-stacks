@@ -61,3 +61,4 @@ networks:
   treafik-network:
     external: true
     name: treafik-network
+  bookstack:
