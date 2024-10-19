@@ -12,19 +12,22 @@ scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: 'prometheus'
     # Override the global default and scrape targets from this job every 5 seconds.
-    scrape_interval: 5s
     static_configs:
       - targets: ['localhost:9090']
 
-  # Example job for node_exporter
-  # - job_name: 'node_exporter'
-  #   static_configs:
-  #     - targets: ['node-exporter:9100']
+  # Exporter for "bomato" a VM running some of my containers
+  # Note, this exposes the VM's metrics. Not the proxmox server metrics
+  - job_name: 'bomato-exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['node-exporter:9100']
 
   # Example job for cadvisor
+  # grabs metrics for all containers running on a host
   - job_name: 'cadvisor'
+    scrape_interval: 5s
     static_configs:
-     - targets: ['cadvisor:8080']
+      - targets: ['cadvisor:8080']
   
   # - job_name: 'uptime'
   #   scrape_interval: 30s
