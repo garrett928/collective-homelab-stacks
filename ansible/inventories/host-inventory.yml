@@ -1,0 +1,7 @@
+ubuntu-server-24.04:
+  hosts:
+    # bomato
+    192.168.1.196:
+      ansible_user: boptart
+      ansible_connection: ssh
+      ansible_ssh_private_key_file: ~/.ssh/ansible

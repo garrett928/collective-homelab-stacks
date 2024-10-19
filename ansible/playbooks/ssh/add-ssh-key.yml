@@ -1,10 +1,9 @@
 # add ssh keys from my github to the ghart user of the target machine
-- hosts: "*"
+- hosts: ubuntu-server-24.04
   become: yes
-  remote_user: ghart 
   tasks: 
-  - name: Set authorized keys taken from url using lookup
+  - name: Set authorized keys - gathered from github.come/garrett928.keys
     ansible.posix.authorized_key:
-      user: ghart
+      user: boptart
       state: present
       key: "{{ lookup('url', 'https://github.com/garrett928.keys', split_lines=False) }}"

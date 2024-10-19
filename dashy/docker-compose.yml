@@ -9,16 +9,11 @@ services:
     volumes:
       - dashy-data:/app/public
       # - ./dashy.yml:/app/public/config.yml
-    ports:
-      - 4000:80
-    # Set any environmental variables
     environment:
       - NODE_ENV=production
-    # Specify your user ID and group ID. You can find this by running `id -u` and `id -g`
-    #  - UID=1000
-    #  - GID=1000
-    # Specify restart policy
     restart: unless-stopped
+    networks:
+      - treafik-network
     # Configure healthchecks
     healthcheck:
       test: ['CMD', 'node', '/app/services/healthcheck']
@@ -26,6 +21,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
+    labels:
+      # Frontend
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashy.rule=Host(`dashy.ghart.space`)"
+      - "traefik.http.routers.dashy.entrypoints=websecure"
+      - "traefik.http.services.dashy.loadbalancer.server.port=8080"
+      - "traefik.http.routers.dashy.service=dashy"
+      - "traefik.http.routers.dashy.tls.certresolver=leresolver"
+      - "traefik.docker.network=treafik-network"
 volumes:
   dashy-data:
+
+networks:
+  treafik-network:
+    external: true
+    name: treafik-network

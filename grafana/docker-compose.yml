@@ -1,19 +1,34 @@
-volumes:
-  grafana-data:
-    driver: local
 services:
   grafana:
     image: grafana/grafana-oss:latest
     container_name: grafana
-    ports:
-      - "3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
     restart: unless-stopped
     networks:
       - monitoring-network
+      - treafik-network
+    environment:
+      GF_SERVER_ROOT_URL: https://grafana.ghart.space
+      GF_SERVER_METRICS_DOMAIN: grafana.ghart.space
+    # ports:
+    #   - 3000:3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.ghart.space`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.service=grafana"
+      - "traefik.http.routers.grafana.tls.certresolver=leresolver"
+      - "traefik.docker.network=treafik-network"
+volumes:
+  grafana-data:
+    driver: local
 
 networks:
   monitoring-network:
     external: true
     name: monitoring-network
+  treafik-network:
+    external: true
+    name: treafik-network

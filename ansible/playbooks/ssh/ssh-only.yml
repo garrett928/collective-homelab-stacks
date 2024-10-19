@@ -1,12 +1,13 @@
 # add my ssh keys from github and then disable password loging and root user login
+#TODO does not work!
 
 - hosts: "*"
   become: yes
-  remote_user: ghart 
+  remote_user: boptart 
   tasks: 
   - name: Set authorized keys taken from github
     ansible.posix.authorized_key:
-      user: ghart
+      user: boptart
       state: present
       key: "{{ lookup('url', 'https://github.com/garrett928.keys', split_lines=False) }}"
 
@@ -33,5 +34,5 @@
   handlers:
   - name: restart ssh
     service:
-      name=sshd
+      name=ssh
       state=restarted
