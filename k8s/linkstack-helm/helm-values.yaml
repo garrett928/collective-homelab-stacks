@@ -1,0 +1,124 @@
+# Chart Values
+
+rbac: 
+  rules: []
+  create: true
+
+image: 
+  tag: latest
+  digest: |-
+
+    sha256:abd691b4293b020a317de8794737671e0315159efcb868e8a4124d6f0611f7ae
+  registry: docker.io
+  pullPolicy: IfNotPresent
+  repository: linkstackorg/linkstack
+  pullSecrets: []
+
+ingress: 
+  tls: []
+  enabled: false
+  className: ""
+  whitelist: ""
+  extraHosts: []
+  annotations: {}
+
+service: 
+  type: ClusterIP
+  ports: 
+    http: 80
+    https: 443
+  nodePort: 30080
+  clusterIP: ""
+  extraPorts: []
+  externalIPs: []
+  loadBalancerIP: ""
+  sessionAffinity: None
+  loadBalancerClass: ""
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  sessionAffinityConfig: {}
+  loadBalancerSourceRanges: []
+
+volumes: []
+
+affinity: {}
+
+strategy: {}
+
+configMap: 
+  labels: {}
+  annotations: {}
+
+linkstack: 
+  data: 
+    pvc: 
+      size: 5Gi
+      storageClass: standard
+      existingClaim: ""
+      reclaimPolicy: Retain
+    rootPath: /htdocs
+  logLevel: info
+  timeZone: UTC
+  serverName: ""
+  serverAdmin: ""
+  phpMemoryLimit: 256M
+  uploadMaxFileSize: 8M
+
+podLabels: {}
+
+resources: {}
+
+tolerations: []
+
+nameOverride: ""
+
+nodeSelector: {}
+
+startupProbe: 
+  enabled: false
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 10
+  successThreshold: 1
+  initialDelaySeconds: 5
+
+volumeMounts: []
+
+livenessProbe: 
+  enabled: false
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 10
+  successThreshold: 1
+  initialDelaySeconds: 5
+
+initContainers: []
+
+podAnnotations: {}
+
+readinessProbe: 
+  enabled: false
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 3
+  successThreshold: 1
+  initialDelaySeconds: 5
+
+serviceAccount: 
+  name: ""
+  create: true
+  secrets: []
+  automount: false
+  annotations: {}
+
+securityContext: {}
+
+fullnameOverride: ""
+
+priorityClassName: ""
+
+podSecurityContext: {}
+
+podDisruptionBudget: 
+  enabled: true
+  minAvailable: 1

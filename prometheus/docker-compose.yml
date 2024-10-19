@@ -3,8 +3,8 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    ports:
-      - "9090:9090"
+    # ports:
+    #   - "9090:9090"
     volumes:
          # portainer includes the ./config/prometheus.yml so this mount works
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -13,6 +13,7 @@ services:
     restart: unless-stopped
     networks:
       - monitoring-network
+      - treafik-network
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -54,6 +55,9 @@ networks:
   monitoring-network:
     external: true
     name: monitoring-network
+  treafik-network:
+    external: true
+    name: treafik-network
 
 volumes:
   prometheus-data:
