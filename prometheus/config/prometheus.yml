@@ -15,20 +15,27 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # Exporter for "bomato" a VM running some of my containers
+  # Exporters for VMs running in proxmox
   # Note, this exposes the VM's metrics. Not the proxmox server metrics
-  - job_name: 'bomato-exporter'
+  # 'node-exporter' 
+  - job_name: 'vms'
     scrape_interval: 5s
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ['bomato.ghart.space:9100', 'mattermost.ghart.space:9100']
 
-  # Example job for cadvisor
+
   # grabs metrics for all containers running on a host
   - job_name: 'cadvisor'
     scrape_interval: 5s
     static_configs:
       - targets: ['cadvisor:8080']
   
+  - job_name: 'proxmox'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['boptart.ghart.space:9100']
+  
+
   # - job_name: 'uptime'
   #   scrape_interval: 30s
   #   scheme: http
@@ -38,8 +45,3 @@ scrape_configs:
     # basic_auth: # Only needed if authentication is enabled (default) 
       # username: <your user>
       # password: <your password>
-
-  # - job_name: 'kafka'
-  #   metrics_path: '/'
-  #   static_configs:
-  #     - targets: ['kafka1:11001', 'kafka0:11001']
