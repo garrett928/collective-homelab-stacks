@@ -1,7 +1,23 @@
 ubuntu-server-24.04:
   hosts:
     # bomato
+    # bomato.ghart.space
     192.168.1.196:
       ansible_user: boptart
+      ansible_connection: ssh
+      ansible_ssh_private_key_file: ~/.ssh/ansible
+    # mattermost2
+    # mattermost.ghart.space
+    192.168.1.121:
+      ansible_user: boptart
+      ansible_connection: ssh
+      ansible_ssh_private_key_file: ~/.ssh/ansible
+
+debian-12:
+  hosts:
+    # boptart
+    # proxmox.ghart.space
+    192.168.1.141:
+      ansible_user: root
       ansible_connection: ssh
       ansible_ssh_private_key_file: ~/.ssh/ansible
