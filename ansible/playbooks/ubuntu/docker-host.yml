@@ -13,6 +13,11 @@
         state: latest
         update_cache: true
 
+    - name: Update distro packages (may take a few minutes)
+      apt:
+        upgrade: dist
+        update_cache: yes
+    
     - name: Remove previous docker packages
       apt:
         pkg:
