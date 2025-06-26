@@ -1,14 +1,14 @@
 # collective-homelab-stacks
 
-A collection of homelab docker files, k8s manifest, and anisble playbooks.
+A collection of homelab docker files, k8s manifest, and ansible playbooks.
 
 ## Organization
 
-Each grouping of software is in its own folder under the this root folder. Some of these projects, like finance are only one applicaiton. Most of these folders are only just a simple docker compose.
+Each grouping of software is in its own folder under the this root folder. Some of these projects, like finance are only one application. Most of these folders are only just a simple docker compose.
 
 ## Monitoring
 
-All of the monitoring services (things which I want to talk to promethesus or grafana) get added to `monitoring-network`.
+All of the monitoring services (things which I want to talk to prometheus or grafana) get added to `monitoring-network`.
 
 ## Portainer
 
@@ -18,6 +18,40 @@ The problem was the ENV feature in portainer was not documented and I could not 
 
 `NOTE: The stack.env file feature from the above docs still does note work. But the individual variables do.`
 
+## Docker / Portainer Installation
+This installation will walk through installing docker and portainer on a Ubuntu machine (or VM). This does not discuss how to setup the Ubuntu machine.
+
+### Requirements
+
+- A machine with this repo cloned. We'll call this the `ansible host`
+- A machine with a fresh install of ubuntu server installed. We'll call this the `ansible target`
+    - I make use of the [community helper scripts](https://community-scripts.github.io/ProxmoxVE/scripts?id=ubuntu2504-vm) to install a docker VM.
+        - If you use the community helper scripts make sure you follow the post install steps in the `cloud init` tab to set the user, password, and ip settings.
+        - I use `ip=dhcp, ip6=dhcp` in the IP config field of cloud init. Then I'll assign a static IP from my router.
+        - Click regenerate image and then restart the machine to finalize the VM creation.
+- Ansible installed on the ansible host
+
+### Setting up ansible
+
+The ansible playbooks expect that a ssh key called "ansible" exist on the ansible host. This ssh key will be used by the playbooks to remote into the ansible target.
+
+1. Create a ssh key called "ansible" on the ansible host
+2. Copy the ansible ssh public key to the ansible target
+3. Verify you can ssh into the ansible target using this key
+4. Update the `ansible/inventories/host-inventory.yml` file
+
+    - update the username for the server
+    - update the ip address of the server
+    - update the file path to the ansible ssh key if needed
+
+### Installing Docker and Portainer
+
+1. Open the ansible directory of this repo in a terminal on the ansible host
+2. Install docker to the ansible target with `ansible-playbook ./playbooks/ubuntu/docker-host.yml --ask-become-pass -i ./
+inventories/host-inventory.yml`. You will be prompted for the account password of the server.
+3. Install protainer to the ansible target with `ansible-playbook ./playbooks/deploy-portainer.yml --ask-become-pass -i ./inventories/host-inventory.yml`. You will be prompted for the account password of the server.
+
 ## TODO
 
-- no todo :)
+- make traefik network not external
+- fix spelling of traefik network
