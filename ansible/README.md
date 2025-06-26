@@ -14,7 +14,7 @@ Automation with ansible
 
 ## Commands
 
-- `ansible all --list-hosts -i ./host-inventory.ini`  
+- `ansible all --list-hosts -i ./host-inventory.yml`  
 - `ansible -i inventory-file groupname -m ping --user username --ask-pass`  
     `-m` is for a module, in this case its ping. `--user` is a user on the remote machine  
 - `ansible-playbook playbook-path --user username --ask-pass --ask-become-pass -i inventory-file`  this will ask for the ssh password and the sudo password for the user
