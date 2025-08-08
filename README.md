@@ -28,8 +28,9 @@ This installation will walk through installing docker and portainer on a Ubuntu 
     - I make use of the [community helper scripts](https://community-scripts.github.io/ProxmoxVE/scripts?id=ubuntu2504-vm) to install a docker VM.
         - If you use the community helper scripts make sure you follow the post install steps in the `cloud init` tab to set the user, password, and ip settings.
         - I use `ip=dhcp, ip6=dhcp` in the IP config field of cloud init. Then I'll assign a static IP from my router.
+        - Make sure you put the ssh key of the machine to use as well.
         - Click regenerate image and then restart the machine to finalize the VM creation.
-- Ansible installed on the ansible host
+- Ansible installed on the ansible host.
 
 ### Setting up ansible
 
@@ -37,6 +38,7 @@ The ansible playbooks expect that a ssh key called "ansible" exist on the ansibl
 
 1. Create a ssh key called "ansible" on the ansible host
 2. Copy the ansible ssh public key to the ansible target
+    - You can use the `
 3. Verify you can ssh into the ansible target using this key
 4. Update the `ansible/inventories/host-inventory.yml` file
 

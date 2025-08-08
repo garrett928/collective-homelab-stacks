@@ -1,6 +1,6 @@
 ---
 - name: Install Docker-CE on Ubutu 24.04 hosts
-  hosts: ubuntu-server-24.04
+  hosts: docker-vm
   # remote_user: boptart
   become: true
   vars:

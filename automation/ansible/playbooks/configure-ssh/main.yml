@@ -1,0 +1,74 @@
+---
+- name: Configure SSH and harden server
+  hosts: docker_vm
+  become: yes
+  vars:
+    github_key_url: 'https://github.com/garrett928.keys'
+    new_ssh_user: boptart
+    new_ssh_port: 5188
+  tasks:
+    - name: Ensure the SSH user exists
+      ansible.builtin.user:
+        name: "{{ new_ssh_user }}"
+        groups: sudo
+        append: yes
+        shell: /bin/bash
+        state: present
+
+    - name: Fetch GitHub SSH keys
+      uri:
+        url: "{{ github_key_url }}"
+        method: GET
+        return_content: yes
+      register: github_keys
+      delegate_to: localhost
+      become: no
+
+    - name: Set authorized keys for SSH user from GitHub
+      ansible.posix.authorized_key:
+        user: "{{ new_ssh_user }}"
+        state: present
+        key: "{{ github_keys.content }}"
+
+    - name: Disable root SSH login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+        backup: yes
+      notify: Restart SSH
+
+    - name: Disable password authentication
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+        backup: yes
+      notify: Restart SSH
+
+    - name: Set SSH port
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Port'
+        line: "Port {{ new_ssh_port }}"
+        state: present
+        backup: yes
+      notify: Restart SSH
+
+    - name: Ensure fail2ban is installed
+      ansible.builtin.package:
+        name: fail2ban
+        state: present
+
+    - name: Ensure fail2ban is running and enabled
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: ssh
