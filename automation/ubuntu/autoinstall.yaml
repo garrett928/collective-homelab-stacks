@@ -1,10 +1,12 @@
 #cloud-config
 autoinstall:
   version: 1
+  interactive-sections:
+    - identity
   identity:
     username: bomato
     hostname: test
-    password: '$6$9/Wy.tMgiKkDLCZJ$77OLbEyEXot0pSZdxpgkCQfUEy.w6a6.vYUWgL7mre5UVtuU/q1FUaaMtqw.a5Sv5TIt9qK6e0J7nJTrEY4h./''
+    password: '$6$9/Wy.tMgiKkDLCZJ$77OLbEyEXot0pSZdxpgkCQfUEy.w6a6.vYUWgL7mre5UVtuU/q1FUaaMtqw.a5Sv5TIt9qK6e0J7nJTrEY4h./'
   ssh:
     install-server: true
     allow-pw: false
