@@ -1,8 +1,6 @@
 #cloud-config
 autoinstall:
   version: 1
-  interactive-sections:
-    - identity
   identity:
     username: bomato
     hostname: test
