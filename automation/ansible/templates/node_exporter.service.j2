@@ -1,0 +1,15 @@
+[Unit]
+Description=Prometheus Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart={{ node_exporter_install_dir }}/node_exporter
+Restart=always
+RestartSec=5
+SyslogIdentifier=node_exporter
+
+[Install]
+WantedBy=multi-user.target

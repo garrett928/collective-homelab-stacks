@@ -57,17 +57,6 @@
         backup: yes
       notify: Restart SSH
 
-    - name: Ensure fail2ban is installed
-      ansible.builtin.package:
-        name: fail2ban
-        state: present
-
-    - name: Ensure fail2ban is running and enabled
-      ansible.builtin.service:
-        name: fail2ban
-        state: started
-        enabled: yes
-
   handlers:
     - name: Restart SSH
       ansible.builtin.service:

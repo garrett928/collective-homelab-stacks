@@ -1,0 +1,61 @@
+---
+# Validation playbook to test the setup
+- name: Validate Ubuntu Server Setup
+  hosts: "{{ target_hosts | default('all') }}"
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Check if Node Exporter is running
+      systemd:
+        name: node_exporter
+      register: node_exporter_status
+      
+    - name: Check if Promtail is running
+      systemd:
+        name: promtail
+      register: promtail_status
+      
+    - name: Check if fail2ban is running
+      systemd:
+        name: fail2ban
+      register: fail2ban_status
+      
+    - name: Check UFW status
+      command: ufw status
+      register: ufw_status
+      changed_when: false
+      
+    - name: Test Node Exporter endpoint
+      uri:
+        url: "http://localhost:9100/metrics"
+        timeout: 10
+      register: node_exporter_metrics
+      failed_when: false
+      
+    - name: Test Promtail endpoint
+      uri:
+        url: "http://localhost:9080/ready"
+        timeout: 10
+      register: promtail_ready
+      failed_when: false
+      
+    - name: Display validation results
+      debug:
+        msg: |
+          Validation Results for {{ inventory_hostname }}:
+          ================================================
+          Node Exporter: {{ 'Running' if node_exporter_status.status.ActiveState == 'active' else 'Not Running' }}
+          Node Exporter Metrics: {{ 'Available' if node_exporter_metrics.status == 200 else 'Not Available' }}
+          Promtail: {{ 'Running' if promtail_status.status.ActiveState == 'active' else 'Not Running' }}  
+          Promtail Ready: {{ 'Available' if promtail_ready.status == 200 else 'Not Available' }}
+          Fail2ban: {{ 'Running' if fail2ban_status.status.ActiveState == 'active' else 'Not Running' }}
+          UFW Status: {{ 'Active' if 'Status: active' in ufw_status.stdout else 'Inactive' }}
+          
+    - name: Summary
+      debug:
+        msg: "✅ Server {{ inventory_hostname }} validation complete"
+      when: 
+        - node_exporter_status.status.ActiveState == 'active'
+        - promtail_status.status.ActiveState == 'active'
+        - fail2ban_status.status.ActiveState == 'active'

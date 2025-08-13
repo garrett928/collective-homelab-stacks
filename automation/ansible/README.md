@@ -17,10 +17,23 @@ ansible/
 │   └── HOSTNAME/
 │       └── vault.yml   # (Optional) Encrypted, only for hosts that need to override defaults (including ansible_user)
 ├── playbooks/
+│   ├── validate-setup.yml           # Validation playbook (cross-platform)
 │   ├── configure-ssh/
 │   │   ├── main.yml
 │   │   └── vars.yml    # Playbook-specific variables (e.g., ssh_user)
+│   ├── ubuntu/
+│   │   ├── ubuntu-server-setup.yml  # Main Ubuntu server setup playbook
+│   │   ├── install-node-exporter.yml   # Node Exporter installation
+│   │   ├── install-promtail.yml        # Promtail log collector installation
+│   │   ├── docker-host.yml
+│   │   └── proxmox-guest-agent.yml
+│   ├── local-setup/
+│   │   └── ...
 │   └── ...             # Other playbooks, each in their own folder
+├── templates/
+│   ├── node_exporter.service.j2    # Node Exporter systemd service
+│   ├── promtail.service.j2          # Promtail systemd service
+│   └── promtail-config.yaml.j2     # Promtail configuration
 └── README.md
 ```
 
@@ -170,13 +183,85 @@ ansible_user: specialuser
 ```yaml
 ssh_user: boptart
 ```
+---
+
+## Ubuntu Server Setup Playbook
+
+The `ubuntu/ubuntu-server-setup.yml` playbook provides complete automation for setting up Ubuntu servers with monitoring, security, and essential tools.
+
+### Features
+
+- **Security Hardening:**
+  - Changes SSH port (default: 5188, customizable)
+  - Disables password authentication
+  - Disables root login
+  - Configures UFW firewall with essential ports
+  - Sets up fail2ban with custom SSH jail
+
+- **Monitoring Setup:**
+  - Installs Prometheus Node Exporter (latest version)
+  - Installs Grafana Promtail for log forwarding
+  - Configures systemd services for both
+
+- **System Configuration:**
+  - Installs essential packages (vim, git, curl, etc.)
+  - Enables qemu-guest-agent for VMs
+  - Clones homelab repository to user's Documents
+
+### Quick Start
+
+1. **Basic usage (uses defaults):**
+   ```bash
+   ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml
+   ```
+
+2. **With custom SSH port:**
+   ```bash
+   ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml -e "custom_ssh_port=2222"
+   ```
+
+3. **With custom Loki server:**
+   ```bash
+   ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml -e "loki_address=my-loki.example.com"
+   ```
+
+### Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `custom_ssh_port` | `5188` | SSH port to configure |
+| `loki_address` | `loki.ghart.space` | Loki server for log forwarding |
+| `target_hosts` | `all` | Host group to target |
+
+### Individual Component Playbooks
+
+You can also run individual components:
+
+- **Node Exporter only:**
+  ```bash
+  ansible-playbook playbooks/ubuntu/install-node-exporter.yml -i inventories/host-inventory.yml
+  ```
+
+- **Promtail only:**
+  ```bash
+  ansible-playbook playbooks/ubuntu/install-promtail.yml -i inventories/host-inventory.yml -e "loki_server=my-loki.example.com"
+  ```
+
+### Idempotency
+
+All playbooks are designed to be idempotent - they can be run multiple times safely:
+- Check existing installations before downloading
+- Compare versions before upgrading
+- Handle already-configured services gracefully
+
+---
 
 ## Links
 
 - [ansible docs](https://docs.ansible.com/ansible/latest/getting_started/index.html)
 - [dnf module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/dnf_module.html) - for installing packeges and upgrading the system  
 - [ssh key module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/authorized_key_module.html)
-- [gnome configuration](https://docs.ansible.com/ansible/latest/collections/community/general/gconftool2_module.html)
+- [gnome configuration](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/systemd_module.html)
   - You'll likely need to install the collection with `ansible-galaxy collection install community.general`
   - [a helpful guide](https://linuxconfig.org/how-to-setup-gnome-using-ansible)
 - [Running playbook on localhost](https://www.middlewareinventory.com/blog/run-ansible-playbook-locally/)

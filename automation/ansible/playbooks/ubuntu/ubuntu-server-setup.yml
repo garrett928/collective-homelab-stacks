@@ -1,0 +1,186 @@
+---
+- name: Ubuntu Server Setup - Main Configuration
+  hosts: "{{ target_hosts | default('all') }}"
+  become: yes
+  vars:
+    ssh_port: "{{ custom_ssh_port | default(22) }}"  # Default SSH port, can be overridden
+    system_username: "{{ ansible_user }}"  # Uses the connected user by default
+    loki_server: "{{ loki_address | default('loki.ghart.space') }}"  # Loki server address
+    
+  pre_tasks:
+    - name: Gather facts
+      setup:
+    
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+  tasks:
+    # Install required packages
+    - name: Install essential packages
+      apt:
+        name:
+          - vim
+          - git
+          - fail2ban
+          - ufw
+          - qemu-guest-agent
+          - curl
+          - wget
+          - unzip
+        state: present
+
+    # Configure SSH
+    - name: Backup SSH config
+      copy:
+        src: /etc/ssh/sshd_config
+        dest: /etc/ssh/sshd_config.backup
+        remote_src: yes
+        force: no
+          - name: Get current SSH port from sshd_config
+            command: "awk '/^Port / {print $2}' /etc/ssh/sshd_config"
+            register: old_ssh_port
+            changed_when: false
+            failed_when: false
+
+          - name: Print current SSH port
+            debug:
+            msg: "Current SSH port is {{ old_ssh_port.stdout | trim }}"
+
+    - name: Print new SSH port
+      debug:
+        msg: "New SSH port will be set to {{ ssh_port }}"  
+
+    - name: Update SSH port
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?Port\s+'
+        line: "Port {{ ssh_port }}"
+        backup: yes
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication\s+'
+        line: "PasswordAuthentication no"
+        backup: yes
+    
+    - name: Disable root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin\s+'
+        line: "PermitRootLogin no"
+        backup: yes
+
+    # Configure UFW - Handle if already enabled
+    - name: Check UFW status
+      command: ufw status
+      register: ufw_status
+      changed_when: false
+      failed_when: false
+      
+    - name: Reset UFW to defaults (if not enabled)
+      ufw:
+        state: reset
+      when: "'Status: active' not in ufw_status.stdout"
+      
+    - name: Set UFW default policies
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+      loop:
+        - { direction: 'incoming', policy: 'deny' }
+        - { direction: 'outgoing', policy: 'allow' }
+        - { direction: 'routed', policy: 'deny' }
+      
+    - name: Allow required ports in UFW
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - "80"
+        - "443"
+        - "{{ ssh_port }}"
+        - "9080"  # Promtail
+        - "9100"  # Node Exporter
+      
+    - name: Enable UFW
+      ufw:
+        state: enabled
+      register: ufw_enabled
+
+    # Configure fail2ban
+    - name: Create fail2ban SSH jail configuration
+      copy:
+        content: |
+          [sshd]
+          enabled = true
+          port = {{ ssh_port }}
+          filter = sshd
+          logpath = /var/log/auth.log
+          maxretry = 5
+          bantime = 3600
+        dest: /etc/fail2ban/jail.d/sshd.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart fail2ban
+    
+    - name: Enable and start fail2ban
+      systemd:
+        name: fail2ban
+        enabled: yes
+        state: started
+
+    # Configure qemu-guest-agent
+    - name: Enable and start qemu-guest-agent
+      systemd:
+        name: qemu-guest-agent
+        enabled: yes
+        state: started
+      ignore_errors: yes  # May not be available on non-VM systems
+
+    # Clone repository
+    - name: Ensure Documents directory exists
+      file:
+        path: "/home/{{ system_username }}/Documents"
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+        mode: '0755'
+      
+    - name: Clone homelab repository
+      git:
+        repo: "https://github.com/garrett928/collective-homelab-stacks"
+        dest: "/home/{{ system_username }}/Documents/collective-homelab-stacks"
+        update: no  # Don't update if already cloned
+        force: no
+      become_user: "{{ system_username }}"
+      register: git_clone_result
+      failed_when: 
+        - git_clone_result is failed
+        - "'already exists and is not an empty directory' not in git_clone_result.msg"
+      
+
+  handlers:
+    - name: Restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted
+
+    # Final message to user  
+    - name: Notify user to reboot for all changes to take effect
+      debug:
+        msg: |
+          Ubuntu server setup is complete!
+          Please reboot the server for all changes (including SSH port and authentication) to take effect.
+
+# Import Node Exporter playbook
+- import_playbook: install-node-exporter.yml
+
+# Import Promtail playbook  
+- import_playbook: install-promtail.yml
+  vars:
+    loki_server: "{{ loki_address | default('loki.ghart.space') }}"

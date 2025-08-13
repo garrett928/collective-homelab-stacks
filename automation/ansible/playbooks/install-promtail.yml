@@ -1,0 +1,137 @@
+---
+- name: Install Grafana Promtail
+  hosts: "{{ target_hosts | default('all') }}"
+  become: yes
+  vars:
+    promtail_install_dir: /opt/promtail
+    promtail_version: ""  # Will be set dynamically
+    loki_address: "{{ loki_server | default('loki.ghart.space') }}"
+  
+  tasks:
+    - name: Install required packages
+      apt:
+        name: unzip
+        state: present
+        update_cache: yes
+    
+    - name: Create promtail user
+      user:
+        name: promtail
+        system: yes
+        shell: /usr/sbin/nologin
+        home: /nonexistent
+        create_home: no
+        state: present
+      
+    - name: Create install directory
+      file:
+        path: "{{ promtail_install_dir }}"
+        state: directory
+        owner: promtail
+        group: promtail
+        mode: '0755'
+        
+    - name: Create positions directory
+      file:
+        path: "{{ promtail_install_dir }}/positions"
+        state: directory
+        owner: promtail
+        group: promtail
+        mode: '0755'
+    
+    - name: Get latest Promtail version
+      uri:
+        url: https://api.github.com/repos/grafana/loki/releases/latest
+        return_content: yes
+        timeout: 30
+      register: promtail_latest
+      retries: 3
+      delay: 5
+      
+    - name: Set Promtail version
+      set_fact:
+        promtail_version: "{{ promtail_latest.json.tag_name | regex_replace('^v', '') }}"
+      
+    - name: Check if Promtail is installed
+      stat:
+        path: "{{ promtail_install_dir }}/promtail"
+      register: promtail_binary
+      
+    - name: Check installed Promtail version
+      shell: "{{ promtail_install_dir }}/promtail --version 2>&1 | head -1 | awk '{print $3}'"
+      register: installed_promtail_version
+      when: promtail_binary.stat.exists
+      changed_when: false
+      failed_when: false
+      
+    - name: Download and install Promtail
+      block:
+        - name: Download Promtail
+          get_url:
+            url: "https://github.com/grafana/loki/releases/download/v{{ promtail_version }}/promtail-linux-amd64.zip"
+            dest: "/tmp/promtail-{{ promtail_version }}.zip"
+            timeout: 60
+          
+        - name: Extract Promtail
+          unarchive:
+            src: "/tmp/promtail-{{ promtail_version }}.zip"
+            dest: "/tmp"
+            remote_src: yes
+          
+        - name: Install Promtail binary
+          copy:
+            src: "/tmp/promtail-linux-amd64"
+            dest: "{{ promtail_install_dir }}/promtail"
+            owner: promtail
+            group: promtail
+            mode: '0755'
+            remote_src: yes
+          notify: Restart Promtail
+          
+        - name: Clean up downloaded files
+          file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - "/tmp/promtail-{{ promtail_version }}.zip"
+            - "/tmp/promtail-linux-amd64"
+      when: >
+        not promtail_binary.stat.exists or
+        (installed_promtail_version.stdout is defined and installed_promtail_version.stdout != promtail_version)
+      
+    - name: Create Promtail config
+      template:
+        src: promtail-config.yaml.j2
+        dest: "{{ promtail_install_dir }}/promtail-config.yaml"
+        owner: promtail
+        group: promtail
+        mode: '0644'
+      notify: Restart Promtail
+      
+    - name: Install Promtail service file
+      template:
+        src: promtail.service.j2
+        dest: /etc/systemd/system/promtail.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify: 
+        - Reload systemd
+        - Restart Promtail
+      
+    - name: Enable and start Promtail service
+      systemd:
+        name: promtail
+        enabled: yes
+        state: started
+        daemon_reload: yes
+  
+  handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+        
+    - name: Restart Promtail
+      systemd:
+        name: promtail
+        state: restarted
