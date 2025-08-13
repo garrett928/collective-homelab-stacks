@@ -197,3 +197,6 @@
 - import_playbook: install-promtail.yml
   vars:
     loki_address: "{{ loki_address }}"
+
+# Import Docker host playbook
+- import_playbook: docker-host.yml
