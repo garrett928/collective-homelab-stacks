@@ -1,0 +1,35 @@
+---
+- name: Clean up conflicting Docker repositories
+  hosts: "{{ target_hosts | default('bomato') }}"
+  become: yes
+
+  tasks:
+    - name: Remove existing Docker repository files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/download_docker_com_linux_ubuntu.list
+        - /etc/apt/sources.list.d/docker.list
+        - /etc/apt/keyrings/docker.gpg
+        - /etc/apt/keyrings/docker.asc
+
+    - name: Remove any Docker entries from main sources.list
+      lineinfile:
+        path: /etc/apt/sources.list
+        regexp: '.*download\.docker\.com.*'
+        state: absent
+
+    - name: Update apt cache after cleanup
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+
+    - name: Verify apt sources are working
+      command: apt list --upgradable
+      register: apt_test
+      changed_when: false
+
+    - name: Display success message
+      debug:
+        msg: "Docker repository cleanup completed successfully. You can now run the docker-host.yml playbook."
