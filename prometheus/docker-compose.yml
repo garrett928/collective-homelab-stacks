@@ -12,8 +12,8 @@ services:
     command: "--config.file=/etc/prometheus/prometheus.yml"
     restart: unless-stopped
     networks:
-      - monitoring-network
-      - treafik-network
+      - prometheus-internal
+      - traefik-network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.ghart.space`)"
@@ -21,7 +21,7 @@ services:
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
       - "traefik.http.routers.prometheus.service=prometheus"
       - "traefik.http.routers.prometheus.tls.certresolver=leresolver"
-      - "traefik.docker.network=treafik-network"
+      - "traefik.docker.network=traefik-network"
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -39,7 +39,18 @@ services:
     # expose:
     #   - 9100
     networks:
-      - monitoring-network
+      - prometheus-internal
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nodeexporter.rule=Host(`metrics.ghart.space`) && Path(`/nodeexporter`)"
+      - "traefik.http.routers.nodeexporter.entrypoints=websecure"
+      - "traefik.http.services.nodeexporter.loadbalancer.server.port=9100"
+      - "traefik.http.routers.nodeexporter.service=nodeexporter"
+      - "traefik.http.routers.nodeexporter.tls.certresolver=leresolver"
+      - "traefik.http.routers.nodeexporter.middlewares=nodeexporter-stripprefix"
+      - "traefik.http.middlewares.nodeexporter-stripprefix.stripprefix.prefixes=/nodeexporter"
+      - "traefik.docker.network=traefik-network"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest    
@@ -57,15 +68,26 @@ services:
     privileged: true
     restart: unless-stopped
     networks:
-      - monitoring-network
+      - prometheus-internal
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cadvisor.rule=Host(`metrics.ghart.space`) && Path(`/cadvisor`)"
+      - "traefik.http.routers.cadvisor.entrypoints=websecure"
+      - "traefik.http.services.cadvisor.loadbalancer.server.port=8080"
+      - "traefik.http.routers.cadvisor.service=cadvisor"
+      - "traefik.http.routers.cadvisor.tls.certresolver=leresolver"
+      - "traefik.http.routers.cadvisor.middlewares=cadvisor-stripprefix"
+      - "traefik.http.middlewares.cadvisor-stripprefix.stripprefix.prefixes=/cadvisor"
+      - "traefik.docker.network=traefik-network"
 
 networks:
-  monitoring-network:
+  prometheus-internal:
+    internal: true
+    name: prometheus-internal
+  traefik-network:
     external: true
-    name: monitoring-network
-  treafik-network:
-    external: true
-    name: treafik-network
+    name: traefik-network
 
 volumes:
   prometheus-data:

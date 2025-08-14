@@ -15,6 +15,14 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
+  # Local node exporter (same host as Prometheus)
+  - job_name: 'local-node-exporter'
+    scrape_interval: 5s
+    scheme: https
+    metrics_path: '/nodeexporter/metrics'
+    static_configs:
+      - targets: ['metrics.ghart.space']
+
   # Exporters for VMs running in proxmox
   # Note, this exposes the VM's metrics. Not the proxmox server metrics
   # 'node-exporter' 
@@ -27,8 +35,10 @@ scrape_configs:
   # grabs metrics for all containers running on a host
   - job_name: 'cadvisor'
     scrape_interval: 5s
+    scheme: https
+    metrics_path: '/cadvisor/metrics'
     static_configs:
-      - targets: ['cadvisor:8080']
+      - targets: ['metrics.ghart.space']
   
   - job_name: 'proxmox'
     scrape_interval: 5s

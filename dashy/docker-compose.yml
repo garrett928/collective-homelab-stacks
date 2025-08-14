@@ -13,7 +13,7 @@ services:
       - NODE_ENV=production
     restart: unless-stopped
     networks:
-      - treafik-network
+      - traefik-network
     # Configure healthchecks
     healthcheck:
       test: ['CMD', 'node', '/app/services/healthcheck']
@@ -29,11 +29,11 @@ services:
       - "traefik.http.services.dashy.loadbalancer.server.port=8080"
       - "traefik.http.routers.dashy.service=dashy"
       - "traefik.http.routers.dashy.tls.certresolver=leresolver"
-      - "traefik.docker.network=treafik-network"
+      - "traefik.docker.network=traefik-network"
 volumes:
   dashy-data:
 
 networks:
-  treafik-network:
+  traefik-network:
     external: true
-    name: treafik-network
+    name: traefik-network

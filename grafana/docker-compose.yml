@@ -6,8 +6,8 @@ services:
       - grafana-data:/var/lib/grafana
     restart: unless-stopped
     networks:
-      - monitoring-network
-      - treafik-network
+      - grafana-internal
+      - traefik-network
     environment:
       GF_SERVER_ROOT_URL: https://grafana.ghart.space
       GF_SERVER_METRICS_DOMAIN: grafana.ghart.space
@@ -20,15 +20,15 @@ services:
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
       - "traefik.http.routers.grafana.service=grafana"
       - "traefik.http.routers.grafana.tls.certresolver=leresolver"
-      - "traefik.docker.network=treafik-network"
+      - "traefik.docker.network=traefik-network"
 volumes:
   grafana-data:
     driver: local
 
 networks:
-  monitoring-network:
+  grafana-internal:
+    internal: true
+    name: grafana-internal
+  traefik-network:
     external: true
-    name: monitoring-network
-  treafik-network:
-    external: true
-    name: treafik-network
+    name: traefik-network

@@ -19,7 +19,7 @@ services:
     # ports:
     #   - 6875:80
     networks:
-      - treafik-network
+      - traefik-network
       - bookstack
 
     restart: unless-stopped
@@ -33,7 +33,7 @@ services:
       - "traefik.http.services.bookstack.loadbalancer.server.port=80"
       - "traefik.http.routers.bookstack.service=bookstack"
       - "traefik.http.routers.bookstack.tls.certresolver=leresolver"
-      - "traefik.docker.network=treafik-network"
+      - "traefik.docker.network=traefik-network"
 
   bookstack_db:
     image: lscr.io/linuxserver/mariadb
@@ -50,7 +50,7 @@ services:
       - bookstack-db-data:/config
     restart: unless-stopped
     networks:
-      - treafik-network
+      - traefik-network
       - bookstack
 
 volumes:
@@ -58,7 +58,7 @@ volumes:
   bookstack-data:
 
 networks:
-  treafik-network:
+  traefik-network:
     external: true
-    name: treafik-network
+    name: traefik-network
   bookstack:

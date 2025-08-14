@@ -121,22 +121,6 @@ ansible/
 
 ---
 
-## 6. First-Time Setup: Bootstrapping a Host
-
-**Step 1:**
-- Run the SSH setup playbook (`configure-ssh`) as `root` (or the initial user) to create a new, secure user and harden SSH.
-- Example:
-  ```sh
-  ansible-playbook -i inventories/host-inventory.yml playbooks/configure-ssh/main.yml --ask-vault-pass
-  ```
-  - If this fails, re-run with `--ask-pass --ask-become-pass` as described above.
-
-**Step 2:**
-- Update your inventory or host/group vars to set `ansible_user` to the new user you just created.
-- All future playbooks should use this new user for improved security.
-
----
-
 ## 6. Notes
 - Only create per-host vault files if you need to override the default for a specific host.
 - After running the configure-ssh playbook, update your inventory or group/host vars to use the new user for future playbooks.
@@ -185,74 +169,239 @@ ssh_user: boptart
 ```
 ---
 
-## Ubuntu Server Setup Playbook
+## Ubuntu Server Setup Playbooks
 
-The `ubuntu/ubuntu-server-setup.yml` playbook provides complete automation for setting up Ubuntu servers with monitoring, security, and essential tools.
+This section contains comprehensive automation for Ubuntu 24.04 server setup, monitoring, and containerization.
 
-### Features
+### Main Setup Playbook: `ubuntu-server-setup.yml`
 
-- **Security Hardening:**
-  - Changes SSH port (default: 5188, customizable)
-  - Disables password authentication
-  - Disables root login
-  - Configures UFW firewall with essential ports
-  - Sets up fail2ban with custom SSH jail
+**Purpose:** Automation for hardening, monitoring, and configuring Ubuntu servers.
 
-- **Monitoring Setup:**
-  - Installs Prometheus Node Exporter (latest version)
-  - Installs Grafana Promtail for log forwarding
-  - Configures systemd services for both
+**What it does:**
+1. **System Updates & Timezone:**
+   - Updates all packages to latest versions
+   - Sets timezone to `America/Indiana/Indianapolis` (EST with DST)
 
-- **System Configuration:**
-  - Installs essential packages (vim, git, curl, etc.)
-  - Enables qemu-guest-agent for VMs
-  - Clones homelab repository to user's Documents
+2. **Security Hardening:**
+   - Changes SSH port (default: 22, customizable via `custom_ssh_port`)
+   - Disables password authentication 
+   - Disables root login
+   - Configures UFW firewall (resets existing rules, then applies clean config)
+   - Sets up fail2ban with SSH jail protection
 
-### Quick Start
+3. **Monitoring Stack:**
+   - Installs Prometheus Node Exporter (port 9100)
+   - Installs Grafana Promtail for log forwarding (port 9080)
+   - Configures systemd services for both
 
-1. **Basic usage (uses defaults):**
-   ```bash
-   ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml
-   ```
+4. **System Configuration:**
+   - Installs essential packages (vim, git, curl, wget, unzip, fail2ban, ufw)
+   - Enables qemu-guest-agent for Proxmox VMs
+   - Clones this homelab repository to user's Documents folder
+   - installs docker and docker compose
 
-2. **With custom SSH port:**
-   ```bash
-   ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml -e "custom_ssh_port=2222"
-   ```
+**Prerequisites:**
+- Ubuntu 24.04 server (fresh install recommended)
+- For Proxmox VMs: qemu-guest-agent must be enabled in VM settings
+- Internet connectivity for package downloads
+- User with sudo privileges
+- ssh keys for ansible already on the ubuntu host
 
-3. **With custom Loki server:**
-   ```bash
-   ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml -e "loki_address=my-loki.example.com"
-   ```
+**Usage Examples:**
 
-### Variables
+```bash
+# Basic usage (SSH port stays 22, uses default Loki server)
+ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml -e "target_hosts=myserver" --ask-become-pass
+
+# With custom SSH port
+ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml -e "target_hosts=myserver custom_ssh_port=2222" --ask-become-pass
+
+# With custom Loki server
+ansible-playbook playbooks/ubuntu/ubuntu-server-setup.yml -i inventories/host-inventory.yml -e "target_hosts=myserver loki_address=my-loki.example.com" --ask-become-pass
+```
+
+**Important Variables:**
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `custom_ssh_port` | `5188` | SSH port to configure |
+| `custom_ssh_port` | `22` | SSH port to configure |
 | `loki_address` | `loki.ghart.space` | Loki server for log forwarding |
 | `target_hosts` | `all` | Host group to target |
+| `system_username` | `{{ ansible_user }}` | User for repo clone |
 
-### Individual Component Playbooks
+**⚠️ Important Notes:**
+- **SSH Changes:** After completion, if you changed the SSH port, you'll need to update your SSH connections
+- **Reboot Required:** The playbook will tell you to reboot for all changes to take effect
+- **UFW Reset:** Existing firewall rules are completely reset and replaced
+- **Promtail Group Membership:** User is added to `adm` group for log access - reboot required for this to take effect
 
-You can also run individual components:
+---
 
-- **Node Exporter only:**
-  ```bash
-  ansible-playbook playbooks/ubuntu/install-node-exporter.yml -i inventories/host-inventory.yml
-  ```
+### 📊 Individual Component Playbooks
 
-- **Promtail only:**
-  ```bash
-  ansible-playbook playbooks/ubuntu/install-promtail.yml -i inventories/host-inventory.yml -e "loki_server=my-loki.example.com"
-  ```
+#### `install-node-exporter.yml`
+**Purpose:** Installs Prometheus Node Exporter for system metrics collection.
 
-### Idempotency
+**Features:**
+- Downloads latest version from GitHub releases
+- Creates dedicated `node_exporter` user
+- Installs to `/opt/node_exporter/`
+- Configures systemd service
+- Idempotent (checks version before upgrading)
 
-All playbooks are designed to be idempotent - they can be run multiple times safely:
-- Check existing installations before downloading
-- Compare versions before upgrading
-- Handle already-configured services gracefully
+**Usage:**
+```bash
+ansible-playbook playbooks/ubuntu/install-node-exporter.yml -i inventories/host-inventory.yml -e "target_hosts=myserver" --ask-become-pass
+```
+
+**Verification:**
+```bash
+# Check service status
+sudo systemctl status node_exporter
+
+# Test metrics endpoint
+curl http://localhost:9100/metrics
+```
+
+#### `install-promtail.yml`
+**Purpose:** Installs Grafana Promtail for log forwarding to Loki.
+
+**Features:**
+- Downloads latest version from GitHub releases
+- Creates dedicated `promtail` user and adds to `adm` group
+- Installs to `/opt/promtail/`
+- Configures log collection for system logs, auth logs, and fail2ban logs
+- Uses templates for configuration
+
+**Usage:**
+```bash
+# With default Loki server
+ansible-playbook playbooks/ubuntu/install-promtail.yml -i inventories/host-inventory.yml -e "target_hosts=myserver" --ask-become-pass
+
+# With custom Loki server
+ansible-playbook playbooks/ubuntu/install-promtail.yml -i inventories/host-inventory.yml -e "target_hosts=myserver loki_address=my-loki.example.com" --ask-become-pass
+```
+
+**Log Sources Configured:**
+- `/var/log/*log` (general system logs)
+- `/var/log/syslog` (system messages)
+- `/var/log/auth.log` (authentication logs)
+- `/var/log/fail2ban.log` (fail2ban logs)
+
+**Verification:**
+```bash
+# Check service status
+sudo systemctl status promtail
+
+# Test metrics endpoint
+curl http://localhost:9080/metrics
+
+# Check logs
+journalctl -u promtail -f
+```
+
+#### `docker-host.yml`
+**Purpose:** Installs Docker CE and Docker Compose on Ubuntu 24.04.
+
+**Features:**
+- Removes old Docker packages
+- Adds official Docker APT repository
+- Installs Docker CE, CLI, containerd, buildx, and compose plugins
+- Runs hello-world container as verification
+
+**Prerequisites:**
+- Must be targeting hosts in `docker-vm` group in inventory
+- Ubuntu 24.04 (uses 'noble' repository)
+
+**Usage:**
+```bash
+ansible-playbook playbooks/ubuntu/docker-host.yml -i inventories/host-inventory.yml --ask-become-pass
+```
+
+**Post-Installation:**
+```bash
+# Add user to docker group (manual step)
+sudo usermod -aG docker $USER
+# Log out and back in for group membership to take effect
+```
+
+#### `proxmox-guest-agent.yml`
+**Purpose:** Simple installation of qemu-guest-agent for Proxmox VMs.
+
+**Prerequisites:**
+- Must be targeting hosts in `ubuntu-server-24.04` group in inventory
+- Proxmox VM with qemu-guest-agent enabled in VM settings
+
+**Usage:**
+```bash
+ansible-playbook playbooks/ubuntu/proxmox-guest-agent.yml -i inventories/host-inventory.yml --ask-become-pass
+```
+
+---
+
+### 🔧 Template Files
+
+The playbooks use Jinja2 templates for configuration:
+
+- **`node_exporter.service.j2`:** Systemd service for Node Exporter
+- **`promtail.service.j2`:** Systemd service for Promtail  
+- **`promtail-config.yaml.j2`:** Promtail configuration with log scraping rules
+
+---
+
+### 🔍 Troubleshooting
+
+**Common Issues:**
+
+1. **SSH Connection Lost After Port Change:**
+   ```bash
+   # Connect with new port
+   ssh -p NEW_PORT user@hostname
+   ```
+
+2. **UFW Blocking Access:**
+   ```bash
+   # Check UFW status
+   sudo ufw status
+   # Manually allow port if needed
+   sudo ufw allow PORT_NUMBER
+   ```
+
+3. **Services Not Starting:**
+   ```bash
+   # Check service logs
+   journalctl -u SERVICE_NAME -f
+   # Check service status
+   systemctl status SERVICE_NAME
+   ```
+
+4. **Promtail Permission Issues:**
+   ```bash
+   # Verify promtail user is in adm group
+   groups promtail
+   # If not, reboot the server
+   ```
+
+5. **Version Check Failures:**
+   - Playbooks auto-detect latest versions from GitHub
+   - If GitHub API is unreachable, manually set version variables
+
+**Monitoring Endpoints:**
+- Node Exporter: `http://server:9100/metrics`
+- Promtail: `http://server:9080/metrics`
+- Loki (if running): `http://loki-server:3100`
+
+---
+
+### 📋 Playbook Execution Order
+
+For new server setup, run in this order:
+1. `ubuntu-server-setup.yml` (comprehensive setup)
+2. `docker-host.yml` (if Docker is needed)
+3. Reboot server
+4. Verify all services are running
+
+**Or use individual playbooks as needed for specific components.**
 
 ---
 

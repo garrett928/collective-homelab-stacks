@@ -1,5 +1,21 @@
-# Setup monitoring network
-Everything which wants to talk to promethesus needs to be added to the `monitoring-network` network in docker. This network needs to be created outside of docker compose. 
+# Prometheus Monitoring Stack
+
+This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive monitoring.
+
+## Network Architecture
+
+- **Internal Network**: `prometheus-internal` - isolates monitoring components
+- **External Access**: Only via Traefik reverse proxy
+- **Metrics Endpoints**:
+  - Prometheus UI: `https://prometheus.ghart.space`
+  - Node Exporter metrics: `https://metrics.ghart.space/nodeexporter/metrics`  
+  - cAdvisor metrics: `https://metrics.ghart.space/cadvisor/metrics`
+
+## Security
+
+- No direct port publishing - all traffic goes through Traefik
+- Internal network prevents lateral movement between containers
+- Metrics endpoints can be secured with Traefik middleware (auth, IP restrictions, etc.)
 
 # XCP-NG Prometheus Exporter
 I'm using an exporter for XCP-NG from this repo, https://github.com/MikeDombo/xen-exporter.

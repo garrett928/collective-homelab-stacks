@@ -1,6 +1,5 @@
 # docker compose for portainer
 # taken from: https://github.com/portainer/portainer-compose/tree/master/traefik
-version: "3.3"
 
 services:
   traefik:
@@ -41,12 +40,13 @@ services:
       - portainer_data:/data
     labels:
       # Frontend
-      - "traefik.enable=false"
-      - "traefik.http.routers.frontend.rule=Host(`dashy.ghart.space`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.services.frontend.loadbalancer.server.port=9000"
-      - "traefik.http.routers.frontend.service=frontend"
-      - "traefik.http.routers.frontend.tls.certresolver=leresolver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.ghart.space`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.routers.portainer.service=portainer"
+      - "traefik.http.routers.portainer.tls.certresolver=leresolver"
+      - "traefik.docker.network=traefik-network"
 
 volumes:
   portainer_data:

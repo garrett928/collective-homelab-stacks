@@ -1,11 +1,8 @@
 ---
 - name: Install Portainer on Node
-  hosts: ubuntu-server-24.04
-  # remote_user: boptart
+  hosts: "{{ target_hosts | default('all') }}"
   become: true
   vars:
-    # the portainer compose file exist at 
-    # 
     homelabRepo: "collective-homelab-stacks" 
     portainerPath: "/portainer"
     # container_count: 4
@@ -20,17 +17,29 @@
     - name: Checkout homelab git repo
       ansible.builtin.git:
         repo: 'https://github.com/garrett928/{{homelabRepo}}.git'
-        dest: /home/{{ansible_user}}/ansible/{{homelabRepo}}
+        dest: /home/{{ansible_user}}/Documents/{{homelabRepo}}
         update: yes
+
+    - name: Remove any existing traefik-network (to let Compose manage it)
+      community.docker.docker_network:
+        name: traefik-network
+        state: absent
+      ignore_errors: true
+      
+    - name: Set up acme.json for Let's Encrypt
+      ansible.builtin.file:
+        path: /home/{{ansible_user}}/Documents/{{homelabRepo}}{{portainerPath}}/acme.json
+        state: touch
+        mode: '0600'
 
     - name: Tear down existing portainer
       community.docker.docker_compose_v2:
-        project_src: /home/{{ansible_user}}/ansible/{{homelabRepo}}{{portainerPath}}
+        project_src: /home/{{ansible_user}}/Documents/{{homelabRepo}}{{portainerPath}}
         state: absent
 
     - name: Create and start Portainer
       community.docker.docker_compose_v2:
-        project_src: /home/{{ansible_user}}/ansible/{{homelabRepo}}{{portainerPath}}
+        project_src: /home/{{ansible_user}}/Documents/{{homelabRepo}}{{portainerPath}}
       register: output
 
     - name: Show results

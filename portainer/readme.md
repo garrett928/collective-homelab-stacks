@@ -1,2 +1,2 @@
 # Portainer
-Note: the treafik network was created in the portainer ui. Any container wishing to use treafik (which is probably all of them) should be added to this network
+Note: the traefik network was created in the portainer ui. Any container wishing to use traefik (which is probably all of them) should be added to this network

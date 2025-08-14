@@ -1,2 +1,2 @@
 # Dashy
-Note: The treafik network was created in the portainer UI
+Note: The traefik network was created in the portainer UI

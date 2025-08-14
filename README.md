@@ -8,7 +8,14 @@ Each grouping of software is in its own folder under the this root folder. Some 
 
 ## Monitoring
 
-All of the monitoring services (things which I want to talk to prometheus or grafana) get added to `monitoring-network`.
+The monitoring architecture follows a secure, network-isolated approach:
+
+- **Each stack** uses its own internal network (e.g., `prometheus-internal`, `grafana-internal`)
+- **Metrics endpoints** are exposed via Traefik at `metrics.ghart.space` with path-based routing:
+  - Node Exporter: `https://metrics.ghart.space/nodeexporter/metrics`
+  - cAdvisor: `https://metrics.ghart.space/cadvisor/metrics`
+- **Only Traefik** has access to both internal networks and external traffic
+- **No direct port publishing** for monitoring services (everything goes through Traefik)
 
 ## Portainer
 
@@ -25,11 +32,6 @@ This installation will walk through installing docker and portainer on a Ubuntu 
 
 - A machine with this repo cloned. We'll call this the `ansible host`
 - A machine with a fresh install of ubuntu server installed. We'll call this the `ansible target`
-    - I make use of the [community helper scripts](https://community-scripts.github.io/ProxmoxVE/scripts?id=ubuntu2504-vm) to install a docker VM.
-        - If you use the community helper scripts make sure you follow the post install steps in the `cloud init` tab to set the user, password, and ip settings.
-        - I use `ip=dhcp, ip6=dhcp` in the IP config field of cloud init. Then I'll assign a static IP from my router.
-        - Make sure you put the ssh key of the machine to use as well.
-        - Click regenerate image and then restart the machine to finalize the VM creation.
 - Ansible installed on the ansible host.
 
 ### Setting up ansible
@@ -38,7 +40,6 @@ The ansible playbooks expect that a ssh key called "ansible" exist on the ansibl
 
 1. Create a ssh key called "ansible" on the ansible host
 2. Copy the ansible ssh public key to the ansible target
-    - You can use the `
 3. Verify you can ssh into the ansible target using this key
 4. Update the `ansible/inventories/host-inventory.yml` file
 
@@ -55,5 +56,6 @@ inventories/host-inventory.yml`. You will be prompted for the account password o
 
 ## TODO
 
-- make traefik network not external
-- fix spelling of traefik network
+- Add authentication/authorization to metrics endpoints
+- Document secrets management workflow
+- Add health checks to all services
