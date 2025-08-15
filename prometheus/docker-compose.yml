@@ -43,7 +43,7 @@ services:
       - traefik-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nodeexporter.rule=Host(`metrics.ghart.space`) && Path(`/nodeexporter`)"
+      - "traefik.http.routers.nodeexporter.rule=Host(`metrics.ghart.space`) && PathPrefix(`/nodeexporter`)"
       - "traefik.http.routers.nodeexporter.entrypoints=websecure"
       - "traefik.http.services.nodeexporter.loadbalancer.server.port=9100"
       - "traefik.http.routers.nodeexporter.service=nodeexporter"
@@ -72,7 +72,7 @@ services:
       - traefik-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.cadvisor.rule=Host(`metrics.ghart.space`) && Path(`/cadvisor`)"
+      - "traefik.http.routers.cadvisor.rule=Host(`metrics.ghart.space`) && PathPrefix(`/cadvisor`)"
       - "traefik.http.routers.cadvisor.entrypoints=websecure"
       - "traefik.http.services.cadvisor.loadbalancer.server.port=8080"
       - "traefik.http.routers.cadvisor.service=cadvisor"
