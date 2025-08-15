@@ -1,5 +1,5 @@
 global:
-  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  scrape_interval: 15s # By default, scrape targets every 15 seconds.
 
   # Attach these labels to any time series or alerts when communicating with
   # external systems (federation, remote storage, Alertmanager).
@@ -15,26 +15,24 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # Local node exporter (same host as Prometheus)
-  - job_name: 'local-node-exporter'
-    scrape_interval: 5s
-    scheme: https
-    metrics_path: '/nodeexporter/metrics'
+  # Node Exporters on all VMs
+  - job_name: 'proxmox-vms'
+    scrape_interval: 10s
     static_configs:
-      - targets: ['metrics.ghart.space']
-    tls_config:
-      insecure_skip_verify: true
+      - targets:
+          - bomato.ghart.space:9100
+          # Add more VMs here
 
-  # Exporters for VMs running in proxmox
-  # Note, this exposes the VM's metrics. Not the proxmox server metrics
-  - job_name: 'vms'
-    scrape_interval: 5s
+  # Node Exporters on Proxmox nodes
+  - job_name: 'proxmox-nodes'
+    scrape_interval: 10s
     static_configs:
-      - targets: ['bomato.ghart.space:9100']
+      - targets:
+          - bickle.ghart.space:9100
+          # Add more nodes here
 
-
-  # grabs metrics for all containers running on a host
-  - job_name: 'cadvisor'
+  # Cadvisor for containers (via Traefik)
+  - job_name: 'containers'
     scrape_interval: 5s
     scheme: https
     metrics_path: '/cadvisor/metrics'
@@ -42,8 +40,3 @@ scrape_configs:
       - targets: ['metrics.ghart.space']
     tls_config:
       insecure_skip_verify: true
-  
-  - job_name: 'proxmox'
-    scrape_interval: 5s
-    static_configs:
-      - targets: ['bickle.ghart.space:9100']
