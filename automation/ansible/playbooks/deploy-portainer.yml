@@ -5,7 +5,7 @@
   vars:
     homelabRepo: "collective-homelab-stacks" 
     portainerPath: "/portainer"
-    # container_count: 4
+    portainerVolumesPath: "/mnt/portainer-relative-volumes"
 
   tasks:
     - name: Creating directory at /home/{{ansible_user}}/ansible
@@ -13,6 +13,12 @@
         path: /home/{{ansible_user}}/ansible
         state: directory
         mode: '0755'
+
+    - name: Create portainer relative volumes directory
+      ansible.builtin.file:
+        path: "{{ portainerVolumesPath }}"
+        state: directory
+        mode: '0777'
 
     - name: Checkout homelab git repo
       ansible.builtin.git:
@@ -25,12 +31,6 @@
         name: traefik-network
         state: absent
       ignore_errors: true
-      
-    - name: Set up acme.json for Let's Encrypt
-      ansible.builtin.file:
-        path: /home/{{ansible_user}}/Documents/{{homelabRepo}}{{portainerPath}}/acme.json
-        state: touch
-        mode: '0600'
 
     - name: Tear down existing portainer
       community.docker.docker_compose_v2:
