@@ -22,6 +22,8 @@ scrape_configs:
     metrics_path: '/nodeexporter/metrics'
     static_configs:
       - targets: ['metrics.ghart.space']
+    tls_config:
+      insecure_skip_verify: true
 
   # Exporters for VMs running in proxmox
   # Note, this exposes the VM's metrics. Not the proxmox server metrics
@@ -38,6 +40,8 @@ scrape_configs:
     metrics_path: '/cadvisor/metrics'
     static_configs:
       - targets: ['metrics.ghart.space']
+    tls_config:
+      insecure_skip_verify: true
   
   - job_name: 'proxmox'
     scrape_interval: 5s
