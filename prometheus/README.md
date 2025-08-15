@@ -17,5 +17,4 @@ This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive mo
 - Internal network prevents lateral movement between containers
 - Metrics endpoints can be secured with Traefik middleware (auth, IP restrictions, etc.)
 
-# XCP-NG Prometheus Exporter
-I'm using an exporter for XCP-NG from this repo, https://github.com/MikeDombo/xen-exporter.
+

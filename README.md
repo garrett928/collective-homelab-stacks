@@ -59,3 +59,4 @@ inventories/host-inventory.yml`. You will be prompted for the account password o
 - Add authentication/authorization to metrics endpoints
 - Document secrets management workflow
 - Add health checks to all services
+- use `ghart.space` domain cert
