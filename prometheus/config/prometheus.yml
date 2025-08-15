@@ -25,11 +25,10 @@ scrape_configs:
 
   # Exporters for VMs running in proxmox
   # Note, this exposes the VM's metrics. Not the proxmox server metrics
-  # 'node-exporter' 
   - job_name: 'vms'
     scrape_interval: 5s
     static_configs:
-      - targets: ['bomato.ghart.space:9100', 'mattermost.ghart.space:9100']
+      - targets: ['bomato.ghart.space:9100']
 
 
   # grabs metrics for all containers running on a host
@@ -43,15 +42,4 @@ scrape_configs:
   - job_name: 'proxmox'
     scrape_interval: 5s
     static_configs:
-      - targets: ['boptart.ghart.space:9100']
-  
-
-  # - job_name: 'uptime'
-  #   scrape_interval: 30s
-  #   scheme: http
-  #   metrics_path: '/metrics'
-  #   static_configs:
-  #     - targets: ['uptime-kuma:3001']
-    # basic_auth: # Only needed if authentication is enabled (default) 
-      # username: <your user>
-      # password: <your password>
+      - targets: ['bickle.ghart.space:9100']
