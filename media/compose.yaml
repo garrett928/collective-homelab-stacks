@@ -148,10 +148,11 @@ volumes:
   sonarr_config:
   transmission_config:
   media_data:
-    driver: nfs
+    driver: "nfs"
     driver_opts:
-      share: "truenas.ghart.space:/mnt/Media/media"
-      
+      o: "addr=truenas.ghart.space"
+      device: ":/mnt/Media/media"
+
 networks:
   traefik-network:
     external: true
