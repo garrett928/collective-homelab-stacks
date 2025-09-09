@@ -8,6 +8,14 @@
     portainerVolumesPath: "/mnt/portainer-relative-volumes"
 
   tasks:
+    # Install required packages
+    - name: Install essential packages
+      apt:
+        name:
+          - git
+          - nfs-common
+        state: present
+
     - name: Creating directory at /home/{{ansible_user}}/ansible
       ansible.builtin.file:
         path: /home/{{ansible_user}}/ansible

@@ -39,6 +39,7 @@
           - curl
           - wget
           - unzip
+          - nfs-common
         state: present
 
     # Configure SSH
