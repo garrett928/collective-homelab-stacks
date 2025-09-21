@@ -1,6 +1,6 @@
 # Homelab Deployment Guide
 
-This guide covers the complete setup of your homelab infrastructure using Infrastructure as Code (IaC) principles.
+This guide covers the complete setup of my homelab infrastructure using Infrastructure as Code (IaC) principles.
 
 ## Prerequisites
 
