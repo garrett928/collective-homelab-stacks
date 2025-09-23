@@ -343,9 +343,9 @@ The key to success with this option is:
 
 ---
 
-## Specialized Implementation Plan for Current Applications
+## Updated Specialized Implementation Plan for Current Applications
 
-Based on your existing services and storage constraints, here's a detailed implementation plan for Option 3B with hybrid storage:
+Based on your feedback about resilient node architecture and resource optimization, here's the revised implementation plan for Option 3B:
 
 ### Storage Strategy by Application
 
@@ -360,113 +360,140 @@ Based on your existing services and storage constraints, here's a detailed imple
 - Grafana data (dashboards/configs) - NFS for backup integration
 ```
 
-#### Longhorn (Small Configs, High Availability)
+#### Longhorn (Small Configs, High Availability with Cross-Host Replication)
 ```yaml
 # Applications needing HA but small storage footprint
-- Radarr/Sonarr/Prowlarr configs (each ~100MB) - 2 replicas for HA
-- Portainer configs - 2 replicas for management reliability  
-- Dashy configs - 2 replicas for dashboard availability
-- InfluxDB data - 2 replicas, can handle node failures
-- Nginx configs - 2 replicas for web serving HA
-- Application secrets/configs - distributed across nodes
+- Radarr/Sonarr/Prowlarr configs (each ~100MB) - 3 replicas across hosts
+- Portainer configs - 3 replicas for management reliability  
+- Dashy configs - 3 replicas for dashboard availability
+- InfluxDB data - 3 replicas, can handle host failures
+- Nginx configs - 3 replicas for web serving HA
+- Application secrets/configs - distributed across physical hosts
 ```
 
-### Node Assignment Strategy
+### Resilient Node Assignment Strategy (Combined Control+Worker)
 
-#### Server 1 (Ryzen 5 7600X) - Control Plane & Critical Apps
+#### Server 1 (Ryzen 5 7600X) - Critical Apps & Storage
 ```yaml
 VMs:
-  - k3s-control-plane-1: 8GB RAM, 4 vCPU, 100GB disk
-  - k3s-control-plane-2: 4GB RAM, 2 vCPU, 50GB disk  
-  - k3s-control-plane-3: 4GB RAM, 2 vCPU, 50GB disk
-  - windows-vm: 16GB RAM, 6 vCPU, P2000 passthrough
-  - monitoring-vm: 8GB RAM, 4 vCPU (Prometheus on dedicated VM)
+  - truenas-vm: 8GB RAM, 4 vCPU, storage controller passthrough
+  - k3s-node-1: 4GB RAM, 2 vCPU (control+worker)
+  - k3s-node-2: 4GB RAM, 2 vCPU (control+worker) 
+  - windows-vm: 12GB RAM, 4 vCPU, P2000 passthrough
+  - Proxmox overhead: ~4GB
+  - Buffer: 33GB available for expansion
 
 Node Labels:
-  role: control-plane
-  storage: longhorn-preferred
-  zone: server1
+  topology.kubernetes.io/zone: server1
+  host-group: server1
+  role: control-worker
 ```
 
-#### Server 2 (i7-10700F) - Storage & Media Processing
+#### Server 2 (i7-10700F) - Compute & Processing
 ```yaml
 VMs:
-  - truenas-vm: 16GB RAM, 6 vCPU, storage controller passthrough
-  - k3s-worker-1: 16GB RAM, 6 vCPU, RTX 3070 access, 100GB disk
-  - k3s-worker-2: 8GB RAM, 4 vCPU, 100GB disk
+  - k3s-compute-node: 8GB RAM, 4 vCPU, RTX 3070 passthrough (control+worker)
+  - k3s-node-3: 4GB RAM, 2 vCPU (control+worker)
+  - Proxmox overhead: ~2GB
+  - Buffer: 2GB (RAM upgrade to 32GB recommended)
 
 Node Labels:
-  role: worker
-  storage: truenas-preferred  
-  gpu: nvidia-rtx3070
-  zone: server2
+  topology.kubernetes.io/zone: server2
+  host-group: server2
+  compute-capable: "true"
+  nvidia.com/gpu: "true"
+  role: control-worker
 ```
 
-#### Mini PCs - Distributed Workers
+#### Mini PCs - Distributed Control+Workers
 ```yaml
 Lenovo ThinkCentre (Ryzen 5 Pro, 12GB RAM):
-  - k3s-worker-mini-1: All resources
-  - Role: Longhorn storage, lightweight apps
-  - Labels: role=worker, storage=longhorn-only, zone=mini1
+  - k3s-node-4: 10GB RAM (control+worker)
+  - Labels: topology.kubernetes.io/zone=mini-lenovo, role=control-worker
 
 Dell Optiplex (i7-4785T, 16GB RAM):
-  - k3s-worker-mini-2: 12GB for k3s, 4GB for backup services
-  - Role: Backup controller, monitoring
-  - Labels: role=worker, storage=longhorn-only, zone=mini2, backup=primary
+  - k3s-node-5: 12GB RAM (control+worker) + 4GB for backup services
+  - Labels: topology.kubernetes.io/zone=mini-dell, role=control-worker, backup=primary
 ```
 
-### Application Deployment Configuration
+### Smart Longhorn Configuration for Cross-Host Replication
 
-#### High Priority (Control Plane Preferred)
+#### Cross-Host Anti-Affinity Configuration
 ```yaml
-# Financial tracking, Home automation, Critical configs
+# Configure Longhorn for cross-host replication
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-cross-host
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "3"
+  dataLocality: "best-effort"
+
+# Enable replica anti-affinity settings
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: replica-soft-anti-affinity
+value: "true"
+
+# Zone-based anti-affinity for physical host separation
+apiVersion: longhorn.io/v1beta2
+kind: Setting  
+metadata:
+  name: replica-zone-soft-anti-affinity
+value: "true"
+
+# This ensures:
+# - No two replicas on nodes within same Proxmox host
+# - Data available even if entire Proxmox server goes down
+# - Automatic replica distribution across zones
+```
+
+### GPU Workload Strategy - Dedicated Compute Node
+
+#### RTX 3070 Assignment
+```yaml
+# Single compute VM with GPU passthrough on Server 2
+k3s-compute-node:
+  GPU: RTX 3070 (full passthrough)
+  Use Cases:
+    - Jellyfin/Plex transcoding (primary)
+    - Ollama/ML workloads (secondary)
+    - Any GPU-accelerated processing
+  
+# Pod scheduling for GPU workloads
 nodeSelector:
-  zone: server1
-storage: longhorn (2 replicas)
+  compute-capable: "true"
 resources:
-  requests: { cpu: 100m, memory: 256Mi }
-  limits: { cpu: 500m, memory: 512Mi }
+  limits:
+    nvidia.com/gpu: 1
+    
+# No GPU splitting - keeps things simple and performant
 ```
 
-#### Media Applications (Storage Node Preferred)
+### Simplified Network Configuration
+
+#### Single Physical Network with Direct 10Gb Link
 ```yaml
-# Jellyfin, Plex, Radarr, Sonarr
-nodeSelector:
-  zone: server2
-  gpu: nvidia-rtx3070  # For transcoding
-storage: truenas-csi (media datasets)
-resources:
-  requests: { cpu: 500m, memory: 1Gi }
-  limits: { cpu: 2000m, memory: 4Gi }
+# Primary network (existing LAN)
+cluster-network: 192.168.1.0/24  # Your existing network
+
+# Direct 10Gb connection between servers only
+server1-server2-direct: 10.0.0.0/30  # Point-to-point for storage traffic
+
+# No complex VLANs initially - can add later if needed
+# QoS prioritization:
+# 1. Storage traffic (highest priority)
+# 2. Kubernetes control traffic (high priority) 
+# 3. General traffic (default priority)
+
+# Mini PCs remain on 1Gb connection to existing network
 ```
 
-#### Distributed Applications (Any Node)
-```yaml
-# Grafana, Dashy, Nginx, InfluxDB
-affinity:
-  preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 100
-      podAffinityTerm:
-        labelSelector:
-          matchLabels:
-            app: distributed-app
-        topologyKey: kubernetes.io/hostname
-storage: longhorn (2 replicas across zones)
-```
+### Optimized StorageClass Definitions
 
-### Network Configuration
-```yaml
-# 10Gb between servers for storage traffic
-server1-server2-storage: 10.0.100.0/30
-# 1Gb for cluster management and mini PC connectivity  
-cluster-management: 192.168.1.0/24
-# Isolated storage network for TrueNAS access
-truenas-storage: 10.0.101.0/24
-```
-
-### StorageClass Definitions
-
-#### TrueNAS Classes
+#### TrueNAS Classes (Unchanged)
 ```yaml
 # For large media storage
 apiVersion: storage.k8s.io/v1
@@ -492,27 +519,29 @@ parameters:
   datasetQuotaBytes: "10737418240"  # 10GB default
 ```
 
-#### Longhorn Classes
+#### Updated Longhorn Classes
 ```yaml
-# For HA configs (2 replicas due to limited nodes)
+# Primary class for HA configs with cross-host replication
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: longhorn-ha-config
+  name: longhorn-cross-host
 provisioner: driver.longhorn.io
 parameters:
-  numberOfReplicas: "2"
-  locality: "best-effort"
+  numberOfReplicas: "3"
+  dataLocality: "best-effort"
   
-# For backup storage on mini PCs
+# Backup target storage (single replica on backup node)
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: longhorn-backup
+  name: longhorn-backup-target
+  annotations:
+    description: "Used as target for backups, not runtime data"
 provisioner: driver.longhorn.io
 parameters:
   numberOfReplicas: "1"
-  dataLocality: "best-effort"
+  nodeSelector: "backup=primary"  # Dell mini PC only
 ```
 
 ### Backup Implementation
@@ -551,47 +580,77 @@ Longhorn Backups:
 - Backup verification: Automated testing scripts
 ```
 
-### Migration Timeline
+### Flexible Implementation Timeline
 
-#### Phase 1: Foundation (Week 1-2)
-1. Install 10Gb NICs and configure networking
-2. Deploy Proxmox on both servers
-3. Create TrueNAS VM with storage passthrough
-4. Set up ZFS pools and basic datasets
-
-#### Phase 2: Kubernetes (Week 3-4)  
-1. Deploy k3s control plane on Server 1
-2. Join worker nodes (Server 2 VM + Mini PCs)
-3. Install Democratic CSI and Longhorn
-4. Configure storage classes and test
-
-#### Phase 3: Application Migration (Week 5-8)
-1. Start with monitoring stack (Prometheus, Grafana)
-2. Migrate databases (BookStack, Monica)
-3. Deploy media stack (Jellyfin, Radarr, Sonarr)
-4. Migrate remaining applications
-
-#### Phase 4: Backup & Hardening (Week 9-10)
-1. Configure backup systems
-2. Test disaster recovery procedures
-3. Implement monitoring and alerting
-4. Document procedures and runbooks
-
-### Expected Resource Utilization
+#### Phase 1: Basic Infrastructure (Initial Weekend)
 ```yaml
-Server 1 (65GB RAM total):
-  - VMs: ~40GB RAM allocated
-  - Proxmox: ~8GB RAM
-  - Buffer: ~17GB RAM
-
-Server 2 (16GB RAM total):  
-  - TrueNAS VM: 16GB allocated initially
-  - Worker VMs: Will need RAM upgrade to 32GB
-  - Recommendation: Add 16GB RAM (~$100)
-
-Mini PCs:
-  - Lenovo: 10GB for k3s, 2GB buffer
-  - Dell: 12GB for k3s + backup services
+- Install Proxmox on both servers
+- Set up TrueNAS VM on Server 1 (8GB RAM initially)
+- Configure storage pools and basic datasets
+- Install 10Gb NICs and configure direct connection
 ```
 
-This plan maximizes your current hardware while providing clear upgrade paths and maintaining the GitOps workflow you prefer.
+#### Phase 2: K8s Foundation (Next Available Weekend)
+```yaml
+- Set up first control+worker node (k3s-node-1)
+- Install k3s with embedded etcd
+- Configure basic networking
+- Test single-node functionality
+```
+
+#### Phase 3: Cluster Expansion (Incremental - as time permits)
+```yaml
+- Add remaining nodes one at a time
+- Deploy Longhorn for distributed storage
+- Configure Democratic CSI for TrueNAS integration
+- Test storage classes and cross-host replication
+```
+
+#### Phase 4: Application Migration (Gradual - one app at a time)
+```yaml
+- Start with non-critical apps (Dashy, monitoring)
+- Migrate databases (BookStack, Monica) 
+- Deploy media stack (Jellyfin, Radarr, Sonarr) on compute node
+- Migrate remaining applications as time allows
+```
+
+#### Phase 5: Optimization & Hardening (Ongoing)
+```yaml
+- Configure backup systems (Dell mini PC)
+- Test disaster recovery procedures
+- Implement comprehensive monitoring
+- Document procedures and create runbooks
+```
+
+### Revised Resource Utilization Summary
+
+#### Current Hardware Allocation
+```yaml
+Server 1 (65GB RAM total):
+  - truenas-vm: 8GB RAM (start small, expand if needed)
+  - k3s-node-1: 4GB RAM (control+worker)
+  - k3s-node-2: 4GB RAM (control+worker)
+  - windows-vm: 12GB RAM (P2000 passthrough)
+  - Proxmox overhead: ~4GB RAM
+  - Available buffer: 33GB RAM (plenty of room to grow)
+
+Server 2 (16GB RAM total):
+  - k3s-compute-node: 8GB RAM (RTX 3070, control+worker)
+  - k3s-node-3: 4GB RAM (control+worker)
+  - Proxmox overhead: ~2GB RAM
+  - Remaining: 2GB buffer
+  - Recommendation: Upgrade to 32GB when convenient (~$100)
+
+Mini PCs (Efficient utilization):
+  - Lenovo: 10GB for k3s-node-4 (control+worker)
+  - Dell: 12GB for k3s-node-5 (control+worker + backup services)
+```
+
+### Key Advantages of This Updated Approach
+
+1. **Maximum Resilience**: Every node is control+worker, cluster survives any single server failure
+2. **Efficient Resource Use**: Smaller VMs (4GB each) with focused roles
+3. **Cross-Host Storage Protection**: Longhorn replicas distributed across physical hosts
+4. **Simplified Networking**: Single network with direct 10Gb link, no complex VLANs
+5. **Practical Timeline**: Incremental implementation fitting real-world constraints
+6. **Future-Proof**: Plenty of RAM headroom for growth and optimization
