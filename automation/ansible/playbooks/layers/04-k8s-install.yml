@@ -1,0 +1,73 @@
+---
+# Layer 4: k3s Installation
+# Installs k3s using the official installation script
+- name: k3s Installation
+  hosts: "{{ target_hosts | default('all') }}"
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Check if k3s is already installed
+      stat:
+        path: "{{ k3s_install_dir }}/k3s"
+      register: k3s_already_installed
+
+    - name: Display k3s installation status
+      debug:
+        msg: "k3s is {{ 'already installed, skipping installation' if k3s_already_installed.stat.exists else 'not installed, proceeding with installation' }}"
+
+    - name: Download k3s installation script
+      get_url:
+        url: https://get.k3s.io
+        dest: /tmp/k3s-install.sh
+        mode: '0755'
+      when: not k3s_already_installed.stat.exists
+
+    - name: Install k3s server (first node preparation)
+      shell: |
+        INSTALL_K3S_VERSION="{{ k3s_version if k3s_version != 'latest' else '' }}" \
+        INSTALL_K3S_EXEC="server" \
+        sh /tmp/k3s-install.sh
+      environment:
+        INSTALL_K3S_SKIP_START: "true"  # Don't start service yet, we'll configure it first
+      when: not k3s_already_installed.stat.exists
+      register: k3s_install_result
+
+    - name: Create k3s config file
+      copy:
+        content: |
+          # k3s server configuration
+          cluster-cidr: "{{ cluster_cidr }}"
+          service-cidr: "{{ service_cidr }}"
+          # Disable some components if needed (uncomment as desired)
+          # disable: traefik,servicelb
+          # Enable cluster-init for embedded etcd (HA)
+          cluster-init: {{ k3s_server_config.get('cluster-init', true) | lower }}
+          # Set node name explicitly
+          node-name: "{{ inventory_hostname }}"
+        dest: "{{ k3s_config_dir }}/config.yaml"
+        mode: '0644'
+      when: not k3s_already_installed.stat.exists
+
+    - name: Clean up installation script
+      file:
+        path: /tmp/k3s-install.sh
+        state: absent
+      when: not k3s_already_installed.stat.exists
+
+    - name: Verify k3s installation
+      stat:
+        path: "{{ k3s_install_dir }}/k3s"
+      register: k3s_verify_install
+
+    - name: Display k3s installation result
+      debug:
+        msg: |
+          k3s Installation Status:
+          - k3s binary: {{ 'Installed' if k3s_verify_install.stat.exists else 'Missing' }}
+          - kubectl: Available at {{ k3s_install_dir }}/kubectl
+          - Config: {{ k3s_config_dir }}/config.yaml
+          - Status: Ready for cluster initialization
+          
+          Note: k3s service is installed but not started yet.
+          Use the init-cluster.yml or join-cluster.yml playbooks to start k3s.

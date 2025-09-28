@@ -1,0 +1,43 @@
+---
+# Complete K8s Node Setup (stops before cluster join)
+# Usage: ansible-playbook -i inventories/homelab.yml playbooks/services/deploy-k8s-node.yml
+
+# Layer 1: Ubuntu base system (uses your existing playbooks)
+- import_playbook: ../layers/01-ubuntu-base.yml
+
+# Layer 2: k3s prerequisites (replaces container runtime)
+- import_playbook: ../layers/02-container-runtime.yml
+
+# Layer 3: k3s system prerequisites  
+- import_playbook: ../layers/03-k8s-prerequisites.yml
+
+# Layer 4: k3s installation
+- import_playbook: ../layers/04-k8s-install.yml
+
+# Layer 5: Monitoring (Node Exporter + Promtail)
+- import_playbook: ../layers/05-monitoring.yml
+
+# Final validation and status
+- name: k3s Node Setup Complete
+  hosts: "{{ target_hosts | default('k8s_nodes') }}"
+  gather_facts: no
+  tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          ================================
+          K8s Node Setup Complete!
+          ================================
+          
+          Node: {{ inventory_hostname }}
+          Status: Ready for cluster initialization or join
+          
+          Next Steps:
+          1. Initialize cluster: ansible-playbook -i inventories/homelab.yml playbooks/k8s/init-cluster.yml
+          2. Or join existing cluster: ansible-playbook -i inventories/homelab.yml playbooks/k8s/join-cluster.yml
+          
+          Services Status:
+          - k3s: Installed and ready (not started yet)
+          - kubectl: Available at /usr/local/bin/kubectl
+          - Monitoring: Node Exporter + Promtail active
+          - Security: SSH hardened, fail2ban active

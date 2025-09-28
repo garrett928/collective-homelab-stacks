@@ -1,0 +1,107 @@
+---
+# Initialize k3s Cluster (First Server Node)
+# Usage: ansible-playbook -i inventories/homelab.yml playbooks/k8s/init-cluster.yml
+- name: Initialize k3s Cluster
+  hosts: k8s_nodes[0]  # First node in the group
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Check if k3s is already running
+      systemd:
+        name: k3s
+      register: k3s_service_status
+      failed_when: false
+
+    - name: Check if k3s cluster is initialized
+      stat:
+        path: "{{ k3s_config_dir }}/k3s.yaml"
+      register: k3s_initialized
+
+    - name: Start k3s service (first server)
+      systemd:
+        name: k3s
+        state: started
+        enabled: yes
+      when: k3s_service_status.status.ActiveState != "active"
+      register: k3s_started
+
+    - name: Wait for k3s to be ready
+      wait_for:
+        port: 6443
+        host: "{{ ansible_default_ipv4.address }}"
+        timeout: 300
+      when: k3s_started is changed or not k3s_initialized.stat.exists
+
+    - name: Create .kube directory for user
+      file:
+        path: "/home/{{ ansible_user }}/.kube"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Copy k3s kubeconfig to user directory
+      copy:
+        src: "{{ k3s_config_dir }}/k3s.yaml"
+        dest: "/home/{{ ansible_user }}/.kube/config"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+        remote_src: yes
+      when: k3s_initialized.stat.exists
+
+    - name: Update kubeconfig server address for user
+      replace:
+        path: "/home/{{ ansible_user }}/.kube/config"
+        regexp: 'https://127.0.0.1:6443'
+        replace: 'https://{{ ansible_default_ipv4.address }}:6443'
+
+    - name: Get k3s node token for joining other nodes
+      slurp:
+        src: "{{ k3s_data_dir }}/server/node-token"
+      register: k3s_token_raw
+
+    - name: Save k3s join information locally
+      local_action:
+        module: copy
+        content: |
+          # k3s cluster join information
+          K3S_URL=https://{{ ansible_default_ipv4.address }}:6443
+          K3S_TOKEN={{ k3s_token_raw.content | b64decode | trim }}
+          
+          # To join additional nodes, run:
+          # curl -sfL https://get.k3s.io | K3S_URL=https://{{ ansible_default_ipv4.address }}:6443 K3S_TOKEN={{ k3s_token_raw.content | b64decode | trim }} sh -
+        dest: "./k3s-join-info.txt"
+        mode: '0600'
+
+    - name: Wait for node to be ready
+      shell: k3s kubectl get nodes {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: node_ready
+      until: node_ready.stdout == "True"
+      retries: 30
+      delay: 10
+
+    - name: Get cluster info
+      shell: k3s kubectl cluster-info
+      register: cluster_info
+
+    - name: Display cluster status
+      debug:
+        msg: |
+          ================================
+          k3s Cluster Initialization Complete!
+          ================================
+          
+          Cluster: {{ cluster_name }}
+          First Node: {{ inventory_hostname }}
+          Status: {{ node_ready.stdout }}
+          API Server: https://{{ ansible_default_ipv4.address }}:6443
+          
+          Cluster Info:
+          {{ cluster_info.stdout }}
+          
+          Join information saved to: ./k3s-join-info.txt
+          
+          To add more nodes:
+          ansible-playbook -i inventories/homelab.yml playbooks/k8s/join-cluster.yml

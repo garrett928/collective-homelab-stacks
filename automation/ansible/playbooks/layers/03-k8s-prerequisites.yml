@@ -1,0 +1,73 @@
+---
+# Layer 3: k3s System Prerequisites
+# Prepares the system for k3s installation (simpler than full Kubernetes)
+- name: k3s System Prerequisites
+  hosts: "{{ target_hosts | default('all') }}"
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Disable swap immediately (k3s recommendation)
+      command: swapoff -a
+      changed_when: false
+      failed_when: false
+
+    - name: Disable swap permanently in fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+      register: swap_disabled
+
+    # k3s handles most kernel modules automatically, but these are still recommended
+    - name: Load kernel modules for k3s networking
+      modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - br_netfilter
+        - ip_tables
+        - ip6_tables
+        - netfilter_xt_REDIRECT
+        - netfilter_xt_owner
+        - netfilter_xt_statistic
+      failed_when: false  # Some modules may not be available
+
+    - name: Make kernel modules persistent for k3s
+      copy:
+        content: |
+          # Kernel modules for k3s
+          br_netfilter
+          ip_tables
+          ip6_tables
+          netfilter_xt_REDIRECT
+          netfilter_xt_owner
+          netfilter_xt_statistic
+        dest: /etc/modules-load.d/k3s.conf
+        mode: '0644'
+
+    - name: Set sysctl parameters for k3s
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+        sysctl_file: /etc/sysctl.d/k3s.conf
+      loop:
+        - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+        - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+        - { name: 'net.ipv4.ip_forward', value: '1' }
+        - { name: 'net.ipv4.conf.all.forwarding', value: '1' }
+
+    - name: Ensure unique hostname for k3s
+      hostname:
+        name: "{{ inventory_hostname }}"
+      when: inventory_hostname is defined
+
+    - name: Update /etc/hosts with hostname
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: "127.0.1.1 {{ inventory_hostname }}"
+        backup: yes
+      when: inventory_hostname is defined

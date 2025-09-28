@@ -1,0 +1,34 @@
+# k3s-specific variables
+---
+# k3s Configuration
+k3s_version: "latest"  # or specify version like "v1.28.3+k3s2"
+cluster_name: "b3s"
+
+# k3s Network Configuration (using defaults)
+cluster_cidr: "10.42.0.0/16"  # Default k3s pod network
+service_cidr: "10.43.0.0/16"  # Default k3s service network
+
+# All nodes are control+worker in your setup (k3s default behavior)
+k3s_server: true   # All nodes can be servers
+k3s_agent: true    # All nodes can run workloads
+
+# k3s Install Configuration
+k3s_install_dir: "/usr/local/bin"
+k3s_config_dir: "/etc/rancher/k3s"
+k3s_data_dir: "/var/lib/rancher/k3s"
+
+# Additional UFW rules for k3s
+k3s_ufw_rules:
+  - { port: "6443", proto: "tcp", comment: "k3s API Server" }
+  - { port: "2379:2380", proto: "tcp", comment: "k3s etcd (HA only)" }
+  - { port: "10250", proto: "tcp", comment: "k3s kubelet metrics" }
+  - { port: "8472", proto: "udp", comment: "k3s Flannel VXLAN" }
+  - { port: "51820", proto: "udp", comment: "k3s Flannel Wireguard IPv4" }
+  - { port: "51821", proto: "udp", comment: "k3s Flannel Wireguard IPv6" }
+  - { port: "5001", proto: "tcp", comment: "k3s Embedded Registry (Spegel)" }
+
+# k3s Server Configuration Options
+k3s_server_config:
+  cluster-cidr: "{{ cluster_cidr }}"
+  service-cidr: "{{ service_cidr }}"
+\  cluster-init: true

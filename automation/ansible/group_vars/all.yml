@@ -1,0 +1,40 @@
+# Global variables for all hosts
+---
+# SSH Configuration
+ssh_port: 22
+
+# System Configuration  
+system_username: "{{ ansible_user }}"
+timezone: "America/Indiana/Indianapolis"
+
+# Monitoring Configuration
+loki_address: "loki.ghart.space"
+
+# Repository Configuration
+homelab_repo: "collective-homelab-stacks"
+homelab_repo_url: "https://github.com/garrett928/{{ homelab_repo }}.git"
+
+# Common packages for all Ubuntu systems
+common_packages:
+  - vim
+  - git
+  - curl
+  - wget
+  - unzip
+  - htop
+  - net-tools
+  - qemu-guest-agent
+  - nfs-common
+
+# Security Configuration
+fail2ban_config:
+  enabled: true
+  maxretry: 5
+  bantime: 3600
+
+# UFW Firewall Rules (common ports) - SSH handled separately in playbook
+ufw_rules:
+  - { port: "80", proto: "tcp", comment: "HTTP" }
+  - { port: "443", proto: "tcp", comment: "HTTPS" }
+  - { port: "9100", proto: "tcp", comment: "Node Exporter" }
+  - { port: "9080", proto: "tcp", comment: "Promtail" }

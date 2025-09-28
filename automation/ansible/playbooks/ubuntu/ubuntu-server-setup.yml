@@ -5,7 +5,7 @@
   vars:
     ssh_port: "{{ custom_ssh_port | default(22) }}"  # Default SSH port, can be overridden
     system_username: "{{ ansible_user }}"  # Uses the connected user by default
-    loki_address: "loki.ghart.space"  # Loki server address
+    loki_address: "{{ loki_address | default('loki.ghart.space') }}"  # Loki server address
     
   pre_tasks:
     - name: Gather facts

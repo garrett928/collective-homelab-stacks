@@ -1,0 +1,33 @@
+---
+# Monitoring Layer: Node Exporter and Promtail
+# This layer uses your existing monitoring playbooks
+- name: Install Node Exporter
+  import_playbook: ../ubuntu/install-node-exporter.yml
+  vars:
+    target_hosts: "{{ target_hosts | default('all') }}"
+
+- name: Install Promtail
+  import_playbook: ../ubuntu/install-promtail.yml
+  vars:
+    target_hosts: "{{ target_hosts | default('all') }}"
+    loki_address: "{{ loki_address | default('loki.ghart.space') }}"
+
+- name: Monitoring Setup Complete
+  hosts: "{{ target_hosts | default('all') }}"
+  gather_facts: no
+  tasks:
+    - name: Display monitoring setup completion
+      debug:
+        msg: |
+          ================================
+          Monitoring Layer Complete!
+          ================================
+          
+          Node: {{ inventory_hostname }}
+          
+          Services Installed:
+          - Node Exporter: Port 9100 (system metrics)
+          - Promtail: Port 9080 (log shipping to {{ loki_address | default('loki.ghart.space') }})
+          
+          Firewall: Ports 9100 and 9080 should be open
+          Status: Ready for metrics collection

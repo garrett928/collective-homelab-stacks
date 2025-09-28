@@ -1,0 +1,45 @@
+---
+# Complete Portainer Host Setup
+# Usage: ansible-playbook -i inventories/homelab.yml playbooks/services/deploy-portainer-host.yml
+
+# Layer 1: Ubuntu base system (uses your existing playbooks)
+- import_playbook: ../layers/01-ubuntu-base.yml
+
+# Layer 2: Container runtime (Docker from your existing playbook)
+- name: Docker Runtime for Portainer
+  import_playbook: ../ubuntu/docker-host.yml
+  vars:
+    target_hosts: "{{ target_hosts | default('portainer_hosts') }}"
+
+# Layer 3: Monitoring (Node Exporter + Promtail)
+- import_playbook: ../layers/05-monitoring.yml
+  vars:
+    target_hosts: "{{ target_hosts | default('portainer_hosts') }}"
+
+# Layer 4: Portainer deployment (uses your existing playbook)
+- import_playbook: ../deploy-portainer.yml
+  vars:
+    target_hosts: "{{ target_hosts | default('portainer_hosts') }}"
+
+# Final status
+- name: Portainer Host Setup Complete
+  hosts: "{{ target_hosts | default('portainer_hosts') }}"
+  gather_facts: no
+  tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          ================================
+          Portainer Host Setup Complete!
+          ================================
+          
+          Node: {{ inventory_hostname }}
+          Status: Portainer deployed and running
+          
+          Access Portainer at: https://{{ ansible_host }}:9443
+          
+          Services Status:
+          - Docker: Running
+          - Portainer: Running
+          - Monitoring: Node Exporter + Promtail active
+          - Security: SSH hardened, fail2ban active
