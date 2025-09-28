@@ -1,0 +1,256 @@
+---
+# Layer 1: Ubuntu Base System Setup
+# Core Ubuntu configuration
+- name: Ubuntu Base System Configuration
+  hosts: "{{ target_hosts | default('all') }}"
+  become: yes
+  vars_files:
+    - ../../group_vars/all.yml
+  
+  pre_tasks:
+    - name: Gather facts
+      setup:
+
+    - name: Ensure ssh_port is set (fallback to 22)
+      set_fact:
+        ssh_port: "{{ ssh_port | default(22) }}"
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages to the latest version
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+  tasks:
+    # Set timezone
+    - name: Set timezone to EST for Indiana
+      timezone:
+        name: "{{ timezone | default('America/Indiana/Indianapolis') }}"
+
+    # Install essential packages (from your common_packages + ubuntu-server-setup)
+    - name: Install essential packages
+      apt:
+        name:
+          - vim
+          - git
+          - fail2ban
+          - ufw
+          - qemu-guest-agent
+          - curl
+          - wget
+          - unzip
+          - nfs-common
+          - htop
+          - net-tools
+        state: present
+
+    # SSH Configuration
+    - name: Backup SSH config
+      copy:
+        src: /etc/ssh/sshd_config
+        dest: /etc/ssh/sshd_config.backup
+        remote_src: yes
+        force: no
+
+    - name: Get current SSH port from sshd_config
+      command: "awk '/^Port / {print $2}' /etc/ssh/sshd_config"
+      register: old_ssh_port
+      changed_when: false
+      failed_when: false
+      check_mode: no
+
+    - name: Print current SSH port
+      debug:
+        msg: "Current SSH port is {{ old_ssh_port.stdout | trim }}"
+
+    - name: Print new SSH port
+      debug:
+        var: ssh_port
+
+    - name: Update SSH port
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?Port\s+'
+        line: "Port {{ ssh_port }}"
+        backup: yes
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication\s+'
+        line: "PasswordAuthentication no"
+        backup: yes
+    
+    - name: Disable root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin\s+'
+        line: "PermitRootLogin no"
+        backup: yes
+
+    # UFW Firewall Configuration
+    - name: Check UFW status
+      command: ufw status
+      register: ufw_status
+      changed_when: false
+      failed_when: false
+      
+    - name: Reset UFW to defaults 
+      ufw:
+        state: reset
+      
+    - name: Set UFW default policies
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+      loop:
+        - { direction: 'incoming', policy: 'deny' }
+        - { direction: 'outgoing', policy: 'allow' }
+        - { direction: 'routed', policy: 'deny' }
+      
+    - name: Allow SSH port in UFW (critical for access)
+      ufw:
+        rule: allow
+        port: "{{ ssh_port }}"
+        proto: tcp
+        comment: "SSH Access"
+
+    - name: Allow basic required ports in UFW
+      ufw:
+        rule: allow
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+        comment: "{{ item.comment }}"
+      loop: "{{ ufw_rules | default([]) }}"
+      when: ufw_rules is defined and ufw_rules | length > 0
+      
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    # Fail2ban Configuration
+    - name: Create fail2ban SSH jail configuration
+      copy:
+        content: |
+          [sshd]
+          enabled = true
+          port = {{ ssh_port }}
+          filter = sshd
+          logpath = /var/log/auth.log
+          maxretry = {{ fail2ban_config.maxretry | default(5) }}
+          bantime = {{ fail2ban_config.bantime | default(3600) }}
+        dest: /etc/fail2ban/jail.d/sshd.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart fail2ban
+    
+    - name: Enable and start fail2ban
+      systemd:
+        name: fail2ban
+        enabled: yes
+        state: started
+
+    # QEMU Guest Agent
+    - name: Enable and start qemu-guest-agent
+      systemd:
+        name: qemu-guest-agent
+        enabled: yes
+        state: started
+      ignore_errors: yes
+
+    # Repository Management
+    - name: Ensure Documents directory exists
+      file:
+        path: "/home/{{ system_username }}/Documents"
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+        mode: '0755'
+
+    - name: Remove existing homelab repository directory (if present)
+      file:
+        path: "/home/{{ system_username }}/Documents/{{ homelab_repo | default('collective-homelab-stacks') }}"
+        state: absent
+
+    - name: Clone homelab repository
+      git:
+        repo: "{{ homelab_repo_url | default('https://github.com/garrett928/collective-homelab-stacks') }}"
+        dest: "/home/{{ system_username }}/Documents/{{ homelab_repo | default('collective-homelab-stacks') }}"
+        update: yes
+        force: yes
+      become: yes
+      become_user: "{{ system_username }}"
+      register: git_clone_result
+      failed_when: git_clone_result is failed
+
+    # SSH Service Management (ensure it's enabled and active)
+    - name: Test SSH configuration syntax
+      command: sshd -t
+      register: ssh_config_test
+      failed_when: ssh_config_test.rc != 0
+      changed_when: false
+
+    - name: Enable SSH service (sshd)
+      systemd:
+        name: sshd
+        enabled: yes
+
+    - name: Start SSH service (sshd) if not running
+      systemd:
+        name: sshd
+        state: started
+      register: ssh_service_started
+
+    - name: Check SSH service status
+      systemd:
+        name: sshd
+      register: ssh_service_status
+
+  handlers:
+    - name: Restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted
+
+  post_tasks:
+    - name: Display ubuntu-base setup completion
+      debug:
+        msg: |
+          ================================
+          Ubuntu Base Setup Complete!
+          ================================
+          
+          System: {{ inventory_hostname }}
+          SSH Port: {{ ssh_port }}
+          Timezone: {{ timezone | default('America/Indiana/Indianapolis') }}
+          
+          Security Status:
+          - SSH: Configuration updated ({{ 'Active' if ssh_service_status.status.ActiveState == 'active' else 'Inactive - requires reboot' }})
+          - UFW: Enabled with basic rules
+          - fail2ban: Active for SSH protection
+          
+          Services:
+          - sshd: {{ ssh_service_status.status.ActiveState }} / {{ ssh_service_status.status.UnitFileState }}
+          - qemu-guest-agent: {{ 'Running' if ansible_virtualization_type == 'kvm' else 'N/A (not a VM)' }}
+          
+          Repository: {{ homelab_repo | default('collective-homelab-stacks') }} cloned
+          
+          🔄 REBOOT REQUIRED:
+          - SSH configuration changes require a reboot to take effect
+          {% if ssh_port != "22" %}
+          - SSH port will change to {{ ssh_port }} after reboot
+          - Update your Ansible inventory with: ansible_port: {{ ssh_port }}
+          - Next connection: ssh -p {{ ssh_port }} {{ ansible_user }}@{{ ansible_host }}
+          {% endif %}
+          - Password authentication will be DISABLED after reboot
+          - Only SSH key authentication will work after reboot
+          - Root login will be DISABLED after reboot
+          
+          Please reboot the server now: sudo reboot
+          
+          Ready for additional layer deployment after reboot!

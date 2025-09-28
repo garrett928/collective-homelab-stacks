@@ -12,14 +12,17 @@ all:
     # VMs that will become K8s nodes
     k8s_nodes:
       hosts:
-        k8s-test-vm:
-          ansible_host: 192.168.0.94  # placeholder
-          ansible_user: garrett         # placeholder
-          node_role: control-worker
+        b8s-01:
+          ansible_host: b8s-01
+          ansible_user: k8s-admin        
+          ansible_ssh_private_key_file: /Users/ghart/.ssh/ansible
+        b8s-02:
+          ansible_host: b8s-02
+          ansible_user: k8s-admin        
+          ansible_ssh_private_key_file: /Users/ghart/.ssh/ansible
+        b8s-03:
+          ansible_host: b8s-03
+          ansible_user: k8s-admin        
           ansible_ssh_private_key_file: /Users/ghart/.ssh/ansible
 
-          
-    # VMs that will run Portainer (can overlap with k8s_nodes)
-    portainer_hosts:
-      hosts:
         

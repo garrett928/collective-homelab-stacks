@@ -1,73 +1,93 @@
 ---
-# Layer 4: k3s Installation
-# Installs k3s using the official installation script
-- name: k3s Installation
-  hosts: "{{ target_hosts | default('all') }}"
-  become: yes
-  gather_facts: yes
+- name: Install K3s with embedded etcd HA
+  hosts: k8s_nodes
+  become: true
+  gather_facts: true
+  
+  vars:
+    k3s_token_file: /var/lib/rancher/k3s/server/node-token
+    k3s_config_file: /etc/rancher/k3s/config.yaml
+    k3s_url: https://{{ hostvars[groups['k8s_nodes'][0]]['ansible_host'] }}:6443
+    first_node: "{{ groups['k8s_nodes'][0] }}"
   
   tasks:
-    - name: Check if k3s is already installed
-      stat:
-        path: "{{ k3s_install_dir }}/k3s"
-      register: k3s_already_installed
-
-    - name: Display k3s installation status
-      debug:
-        msg: "k3s is {{ 'already installed, skipping installation' if k3s_already_installed.stat.exists else 'not installed, proceeding with installation' }}"
-
-    - name: Download k3s installation script
-      get_url:
-        url: https://get.k3s.io
-        dest: /tmp/k3s-install.sh
+    - name: Create k3s config directory
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
         mode: '0755'
-      when: not k3s_already_installed.stat.exists
-
-    - name: Install k3s server (first node preparation)
-      shell: |
-        INSTALL_K3S_VERSION="{{ k3s_version if k3s_version != 'latest' else '' }}" \
-        INSTALL_K3S_EXEC="server" \
-        sh /tmp/k3s-install.sh
-      environment:
-        INSTALL_K3S_SKIP_START: "true"  # Don't start service yet, we'll configure it first
-      when: not k3s_already_installed.stat.exists
-      register: k3s_install_result
-
-    - name: Create k3s config file
-      copy:
-        content: |
-          # k3s server configuration
-          cluster-cidr: "{{ cluster_cidr }}"
-          service-cidr: "{{ service_cidr }}"
-          # Disable some components if needed (uncomment as desired)
-          # disable: traefik,servicelb
-          # Enable cluster-init for embedded etcd (HA)
-          cluster-init: {{ k3s_server_config.get('cluster-init', true) | lower }}
-          # Set node name explicitly
-          node-name: "{{ inventory_hostname }}"
-        dest: "{{ k3s_config_dir }}/config.yaml"
+    
+    - name: Copy K3s configuration file
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../files/k3s-config.yaml"
+        dest: "{{ k3s_config_file }}"
         mode: '0644'
-      when: not k3s_already_installed.stat.exists
+      notify: restart k3s
+      
+    - name: Check if K3s is already installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary
+    - name: Install K3s on first node with cluster-init
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | sh -s - server --cluster-init
+      when: 
+        - inventory_hostname == first_node
+        - not k3s_binary.stat.exists
+      
+    - name: Wait for first node to be ready
+      ansible.builtin.wait_for:
+        path: "{{ k3s_token_file }}"
+        timeout: 120
+      when: inventory_hostname == first_node
+      
+    - name: Get K3s token from first node
+      ansible.builtin.slurp:
+        src: "{{ k3s_token_file }}"
+      register: k3s_token_slurp
+      when: inventory_hostname == first_node
+      
+    - name: Set k3s_token fact for all nodes
+      ansible.builtin.set_fact:
+        k3s_token: "{{ hostvars[first_node]['k3s_token_slurp']['content'] | b64decode | trim }}"
+      
+    - name: Join additional server nodes to the cluster
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | sh -s - server \
+          --token {{ k3s_token }} \
+          --server {{ k3s_url }}
+      when: 
+        - inventory_hostname != first_node
+        - not k3s_binary.stat.exists
+      
+    - name: Ensure K3s service is enabled and started
+      ansible.builtin.service:
+        name: k3s
+        enabled: true
+        state: started
+        
+    - name: Create .kube directory for k8s-admin user
+      ansible.builtin.file:
+        path: /home/k8s-admin/.kube
+        state: directory
+        owner: k8s-admin
+        group: k8s-admin
+        mode: '0755'
+      when: inventory_hostname == first_node
+      
+    - name: Copy kubeconfig for k8s-admin user
+      ansible.builtin.copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /home/k8s-admin/.kube/config
+        remote_src: yes
+        owner: k8s-admin
+        group: k8s-admin
+        mode: '0600'
+      when: inventory_hostname == first_node
 
-    - name: Clean up installation script
-      file:
-        path: /tmp/k3s-install.sh
-        state: absent
-      when: not k3s_already_installed.stat.exists
-
-    - name: Verify k3s installation
-      stat:
-        path: "{{ k3s_install_dir }}/k3s"
-      register: k3s_verify_install
-
-    - name: Display k3s installation result
-      debug:
-        msg: |
-          k3s Installation Status:
-          - k3s binary: {{ 'Installed' if k3s_verify_install.stat.exists else 'Missing' }}
-          - kubectl: Available at {{ k3s_install_dir }}/kubectl
-          - Config: {{ k3s_config_dir }}/config.yaml
-          - Status: Ready for cluster initialization
-          
-          Note: k3s service is installed but not started yet.
-          Use the init-cluster.yml or join-cluster.yml playbooks to start k3s.
+  handlers:
+    - name: restart k3s
+      ansible.builtin.service:
+        name: k3s
+        state: restarted
+      when: k3s_binary.stat.exists

@@ -1,0 +1,57 @@
+---
+- name: K3s prerequisites setup
+  hosts: k8s_nodes
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Allow API server traffic on port 6443
+      ansible.builtin.ufw:
+        rule: allow
+        port: 6443
+        proto: tcp
+      tags: [firewall]
+
+    - name: Allow pod network traffic
+      ansible.builtin.command:
+        cmd: ufw allow from 10.42.0.0/16 to any
+      tags: [firewall]
+
+    - name: Allow service network traffic
+      ansible.builtin.command:
+        cmd: ufw allow from 10.43.0.0/16 to any
+      tags: [firewall]
+
+    - name: Allow traffic on port 10250
+      ansible.builtin.ufw:
+        rule: allow
+        port: 10250
+        proto: tcp
+      tags: [firewall]
+
+    - name: Allow traffic on port 51820
+      ansible.builtin.ufw:
+        rule: allow
+        port: 51820
+        proto: udp
+      tags: [firewall]
+
+    - name: Allow HA etcd traffic on ports 2379-2380
+      ansible.builtin.ufw:
+        rule: allow
+        port: "2379:2380"
+        proto: tcp
+      tags: [firewall]
+
+    - name: Allow WireGuard IPv6 traffic on port 51821
+      ansible.builtin.ufw:
+        rule: allow
+        port: 51821
+        proto: udp
+      tags: [firewall]
+
+    - name: Restart UFW service
+      ansible.builtin.service:
+        name: ufw
+        state: restarted
+      tags: [firewall]
