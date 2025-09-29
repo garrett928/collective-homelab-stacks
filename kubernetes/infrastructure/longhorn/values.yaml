@@ -1,0 +1,8 @@
+ingress:
+  enabled: true
+  host: longhorn.ghart.space
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  tls:
+    enabled: true
+    secretName: longhorn-tls
