@@ -5,10 +5,11 @@ metadata:
   namespace: argocd
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
-    # Tell Traefik to use HTTPS backend
+    # Backend protocol is HTTPS
     traefik.ingress.kubernetes.io/service.serversscheme: https
-    # Use the middleware in the same namespace
-    traefik.ingress.kubernetes.io/router.middlewares: argocd-argocd-server@kubernetescrd
+    # Skip TLS verification for self-signed certs
+    traefik.ingress.kubernetes.io/service.passhostheader: "true"
+    traefik.ingress.kubernetes.io/service.serverstransport: argocd-transport@kubernetescrd
 spec:
   rules:
   - host: argocd.ghart.space
@@ -20,7 +21,7 @@ spec:
           service:
             name: argocd-server
             port:
-              number: 443
+              number: 443  # Use HTTPS port as confirmed by port-forward
   tls:
   - hosts:
     - argocd.ghart.space
@@ -37,3 +38,12 @@ spec:
       X-Forwarded-Proto: "https"
       X-Forwarded-Port: "443"
       X-Forwarded-Host: "argocd.ghart.space"
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: argocd-transport
+  namespace: argocd
+spec:
+  serverName: argocd-server
+  insecureSkipVerify: true  # Skip TLS verification for ArgoCD's self-signed cert
