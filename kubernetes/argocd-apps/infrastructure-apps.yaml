@@ -76,6 +76,39 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 5m
+  ignoreDifferences:
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: monitoring-kube-prometheus-admission
+      namespace: monitoring
+      jsonPointers:
+        - /metadata/labels
+        - /metadata/annotations
+        - /rules
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: monitoring-kube-prometheus-admission
+      namespace: monitoring
+      jsonPointers:
+        - /metadata/labels
+        - /metadata/annotations
+        - /subjects
+    - group: rbac.authorization.k8s.io
+      kind: Role
+      name: monitoring-kube-prometheus-admission
+      namespace: monitoring
+      jsonPointers:
+        - /metadata/labels
+        - /metadata/annotations
+        - /rules
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+      name: monitoring-kube-prometheus-admission
+      namespace: monitoring
+      jsonPointers:
+        - /metadata/labels
+        - /metadata/annotations
+        - /subjects
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
