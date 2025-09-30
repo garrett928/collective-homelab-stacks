@@ -68,6 +68,14 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - Replace=true
+      - Force=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 10
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 5m
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
