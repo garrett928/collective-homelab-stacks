@@ -72,3 +72,8 @@ kube-prometheus-stack:
         - secretName: alertmanager-tls
           hosts:
             - alertmanager.ghart.space
+  prometheusOperator:
+    admissionWebhooks:
+      enabled: true
+      patch:
+        enabled: true
