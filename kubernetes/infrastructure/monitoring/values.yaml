@@ -1,16 +1,10 @@
 kube-prometheus-stack:
-  # Ensure CRDs are installed
-  installCRDs: true
+  # Install CRDs separately (avoid Argo CD long-annotation issue on CRDs)
+  installCRDs: false
   
-  # Ensure CRDs are installed
+  # CRDs are managed outside the chart
   crds:
-    enabled: true
-  
-  # Global configuration to handle CRD installation
-  global:
-    # Enable server-side apply for better CRD handling
-    rbac:
-      create: true
+    enabled: false
   
   prometheus:
     prometheusSpec:
@@ -74,11 +68,7 @@ kube-prometheus-stack:
             - alertmanager.ghart.space
   prometheusOperator:
     admissionWebhooks:
-      enabled: true
-      # Avoid duplicate hook RBAC/resources that can conflict under Argo CD
-      patch:
-        enabled: false
-        rbac:
-          create: false
+      # Disable admission webhook jobs and RBAC to avoid hook conflicts
+      enabled: false
       patch:
         enabled: true
