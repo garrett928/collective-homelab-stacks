@@ -1,49 +1,24 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: argocd-server-ingress
-  namespace: argocd
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    # Backend protocol is HTTPS
-    traefik.ingress.kubernetes.io/service.serversscheme: https
-    # Skip TLS verification for self-signed certs
-    traefik.ingress.kubernetes.io/service.passhostheader: "true"
-    traefik.ingress.kubernetes.io/service.serverstransport: argocd-transport@kubernetescrd
-spec:
-  rules:
-  - host: argocd.ghart.space
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: argocd-server
-            port:
-              number: 443  # Use HTTPS port as confirmed by port-forward
-  tls:
-  - hosts:
-    - argocd.ghart.space
-    secretName: argocd-server-tls
----
 apiVersion: traefik.io/v1alpha1
-kind: Middleware
+kind: IngressRoute
 metadata:
   name: argocd-server
-  namespace: argocd  # Same namespace as the ingress
-spec:
-  headers:
-    customRequestHeaders:
-      X-Forwarded-Proto: "https"
-      X-Forwarded-Port: "443"
-      X-Forwarded-Host: "argocd.ghart.space"
----
-apiVersion: traefik.io/v1alpha1
-kind: ServersTransport
-metadata:
-  name: argocd-transport
   namespace: argocd
 spec:
-  serverName: argocd-server
-  insecureSkipVerify: true  # Skip TLS verification for ArgoCD's self-signed cert
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`argocd.ghart.space`)
+      priority: 10
+      services:
+        - name: argocd-server
+          port: 80
+    - kind: Rule
+      match: Host(`argocd.ghart.space`) && Headers(`Content-Type`, `application/grpc`)
+      priority: 11
+      services:
+        - name: argocd-server
+          port: 80
+          scheme: h2c
+  tls:
+    secretName: argocd-server-tls
