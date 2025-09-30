@@ -1,4 +1,17 @@
 kube-prometheus-stack:
+  # Ensure CRDs are installed
+  installCRDs: true
+  
+  # Ensure CRDs are installed
+  crds:
+    enabled: true
+  
+  # Global configuration to handle CRD installation
+  global:
+    # Enable server-side apply for better CRD handling
+    rbac:
+      create: true
+  
   prometheus:
     prometheusSpec:
       storageSpec:
