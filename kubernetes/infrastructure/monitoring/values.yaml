@@ -75,5 +75,10 @@ kube-prometheus-stack:
   prometheusOperator:
     admissionWebhooks:
       enabled: true
+      # Avoid duplicate hook RBAC/resources that can conflict under Argo CD
+      patch:
+        enabled: false
+        rbac:
+          create: false
       patch:
         enabled: true

@@ -68,19 +68,16 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - Replace=true
-      - Force=true
-      - ApplyOutOfSyncOnly=true
     retry:
-      limit: 10
+      limit: 5
       backoff:
         duration: 5s
         factor: 2
-        maxDuration: 5m
+        maxDuration: 3m
   ignoreDifferences:
     - group: rbac.authorization.k8s.io
       kind: ClusterRole
       name: monitoring-kube-prometheus-admission
-      namespace: monitoring
       jsonPointers:
         - /metadata/labels
         - /metadata/annotations
@@ -88,7 +85,6 @@ spec:
     - group: rbac.authorization.k8s.io
       kind: ClusterRoleBinding
       name: monitoring-kube-prometheus-admission
-      namespace: monitoring
       jsonPointers:
         - /metadata/labels
         - /metadata/annotations
@@ -109,6 +105,13 @@ spec:
         - /metadata/labels
         - /metadata/annotations
         - /subjects
+    - group: ""
+      kind: ServiceAccount
+      name: monitoring-kube-prometheus-admission
+      namespace: monitoring
+      jsonPointers:
+        - /metadata/labels
+        - /metadata/annotations
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
