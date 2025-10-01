@@ -44,7 +44,6 @@ kube-prometheus-stack:
         - secretName: grafana-tls
           hosts:
             - grafana.ghart.space
-    adminPassword: "admin123"  # Change this!
 
   alertmanager:
     alertmanagerSpec:
