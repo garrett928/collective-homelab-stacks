@@ -112,21 +112,21 @@ spec:
       jsonPointers:
         - /metadata/labels
         - /metadata/annotations
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: application-apps
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/garrett928/collective-homelab-stacks.git
-    targetRevision: HEAD
-    path: kubernetes/applications
-    directory:
-      recurse: true
-  destination:
-    server: https://kubernetes.default.svc
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: application-apps
+#   namespace: argocd
+#   finalizers:
+#     - resources-finalizer.argocd.argoproj.io
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/garrett928/collective-homelab-stacks.git
+#     targetRevision: HEAD
+#     path: kubernetes/applications
+#     directory:
+#       recurse: true
+#   destination:
+#     server: https://kubernetes.default.svc
