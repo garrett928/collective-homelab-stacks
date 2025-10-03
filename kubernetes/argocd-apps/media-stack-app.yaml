@@ -11,6 +11,8 @@ spec:
     repoURL: https://github.com/garrett928/collective-homelab-stacks.git
     targetRevision: HEAD
     path: kubernetes/applications/media-stack
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: media
