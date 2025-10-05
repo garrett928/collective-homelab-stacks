@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: transmission-ui
+  name: transmission-frontend
   namespace: media
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
