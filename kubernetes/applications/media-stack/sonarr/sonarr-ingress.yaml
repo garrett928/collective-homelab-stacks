@@ -1,10 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sonarr-ingress
+  name: sonarr-ui
   namespace: media
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   rules:
   - host: sonarr.ghart.space
@@ -17,3 +17,7 @@ spec:
             name: sonarr
             port:
               number: 8989
+  tls:
+  - hosts:
+    - sonarr.ghart.space
+    secretName: sonarr-tls
