@@ -13,7 +13,7 @@ spec:
     server: truenas.ghart.space
     path: /mnt/tank/media/data
   mountOptions:
-    - nfsvers=4.1
+    - nfsvers=4.0
     - hard
     - intr
 
