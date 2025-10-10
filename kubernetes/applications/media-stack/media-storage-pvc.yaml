@@ -1,12 +1,31 @@
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-storage-pv
+spec:
+  capacity:
+    storage: 20Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: truenas.ghart.space
+    path: /mnt/tank/media/data
+  mountOptions:
+    - nfsvers=4.1
+    - hard
+    - intr
+
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: media-storage
   namespace: media
 spec:
-  storageClassName: longhorn
   accessModes:
     - ReadWriteMany
   resources:
     requests:
-      storage: 5Gi
+      storage: 20Ti
+  volumeName: media-storage-pv
