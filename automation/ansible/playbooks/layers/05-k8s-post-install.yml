@@ -131,6 +131,11 @@
           defaultSettings:
             defaultDataPath: /var/lib/longhorn
             defaultReplicaCount: "2"
+            # Correct Longhorn setting names from the docs
+            defaultDataLocality: "best-effort"
+            replicaAutoBalance: "best-effort"
+            replicaSoftAntiAffinity: "true"
+            storageMinimalAvailablePercentage: "10"
           persistence:
             defaultClass: true
             defaultClassReplicaCount: "2"
