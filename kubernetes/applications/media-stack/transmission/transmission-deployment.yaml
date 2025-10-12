@@ -32,6 +32,8 @@ spec:
             add:
               - NET_ADMIN
         env:
+        - name: FIREWALL_VPN_INPUT_PORTS
+          value: "57053"
         - name: VPN_SERVICE_PROVIDER
           value: "airvpn"
         - name: VPN_TYPE
