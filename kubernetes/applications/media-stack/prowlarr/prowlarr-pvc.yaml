@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: prowlarr-config
+  name: prowlarr-conf
   namespace: media
 spec:
   storageClassName: longhorn-retain
