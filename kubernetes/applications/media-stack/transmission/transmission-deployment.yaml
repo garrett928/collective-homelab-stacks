@@ -115,7 +115,7 @@ spec:
       volumes:
       - name: config
         persistentVolumeClaim:
-          claimName: transmission-config
+          claimName: transmission-conf
       - name: data
         persistentVolumeClaim:
           claimName: media-storage

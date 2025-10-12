@@ -50,7 +50,7 @@ spec:
       volumes:
       - name: config
         persistentVolumeClaim:
-          claimName: sonarr-config
+          claimName: sonarr-conf
       - name: data
         persistentVolumeClaim:
           claimName: media-storage
