@@ -14,7 +14,7 @@ spec:
         app: transmission
     spec:
       containers:
-      # Gluetun VPN sidecar container
+      # Gluetun VPN sidecar container - handles network and exposes ports
       - name: gluetun
         image: qmcgaw/gluetun
         securityContext:
@@ -47,6 +47,7 @@ spec:
           value: "192.168.0.0/16,10.0.0.0/8"
         - name: TZ
           value: "America/New_York"
+        # Gluetun exposes the ports that transmission will use
         ports:
         - containerPort: 9091
           name: web
@@ -87,16 +88,7 @@ spec:
             secretKeyRef:
               name: media-secrets
               key: TRANSMISSION_PASSWORD
-        # Transmission will use localhost since it shares network with gluetun
-        ports:
-        - containerPort: 9091
-          name: web
-        - containerPort: 51413
-          name: peer
-          protocol: TCP
-        - containerPort: 51413
-          name: peer-udp
-          protocol: UDP
+        # No ports needed - network is shared with gluetun
         volumeMounts:
         - name: config
           mountPath: /config
@@ -109,9 +101,6 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
-        # Ensure Transmission starts after Gluetun
-        dependsOn:
-        - gluetun
       
       volumes:
       - name: config
@@ -125,10 +114,6 @@ spec:
           path: /dev/net/tun
           type: CharDevice
       
-      # Share network namespace between containers
-      shareProcessNamespace: false
-      dnsPolicy: "None"
-      dnsConfig:
-        nameservers:
-          - "1.1.1.1"
-          - "1.0.0.1"
+      # Containers in the same pod automatically share network namespace
+      # Use default Kubernetes DNS for internal service discovery
+      dnsPolicy: "ClusterFirst"
