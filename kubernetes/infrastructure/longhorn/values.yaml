@@ -6,3 +6,13 @@ ingress:
   tls:
     enabled: true
     secretName: longhorn-tls
+
+storageClass:
+  retain:
+    enabled: true
+    name: longhorn-retain
+    isDefaultClass: true
+    reclaimPolicy: Retain
+    parameters:
+      numberOfReplicas: "2"
+      dataLocality: "best-effort"

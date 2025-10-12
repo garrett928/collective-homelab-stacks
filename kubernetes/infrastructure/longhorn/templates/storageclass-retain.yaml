@@ -1,0 +1,22 @@
+{{- if .Values.storageClass.retain.enabled }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.storageClass.retain.name }}
+  annotations:
+    storageclass.kubernetes.io/is-default-class: {{ .Values.storageClass.retain.isDefaultClass | quote }}
+allowVolumeExpansion: true
+provisioner: driver.longhorn.io
+reclaimPolicy: {{ .Values.storageClass.retain.reclaimPolicy }}
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: {{ .Values.storageClass.retain.parameters.numberOfReplicas | quote }}
+  staleReplicaTimeout: "30" 
+  fromBackup: ""
+  fsType: "ext4"
+  dataLocality: {{ .Values.storageClass.retain.parameters.dataLocality | quote }}
+  unmapMarkSnapChainRemoved: "ignored"
+  disableRevisionCounter: "true"
+  dataEngine: "v1"
+  backupTargetName: "default"
+{{- end }}
