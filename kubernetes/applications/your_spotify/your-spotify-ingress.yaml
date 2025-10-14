@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: your-spotify-ui
+  namespace: media
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  rules:
+  - host: spotify.ghart.space
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: your_spotify
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - spotify.ghart.space
+    secretName: spotify-tls

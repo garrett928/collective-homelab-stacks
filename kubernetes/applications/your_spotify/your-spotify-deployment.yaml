@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: your-spotify
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: your-spotify
+  template:
+    metadata:
+      labels:
+        app: your-spotify
+    spec:
+      containers:
+      - name: your-spotify
+        image: lscr.io/linuxserver/your_spotify:latest
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/New_York"
+        - name: APP_URL
+          valueFrom:
+            secretKeyRef:
+              name: your-spotify-secrets
+              key: APP_URL
+        - name: SPOTIFY_PUBLIC
+          valueFrom:
+            secretKeyRef:
+              name: your-spotify-secrets
+              key: SPOTIFY_PUBLIC
+        - name: SPOTIFY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: your-spotify-secrets
+              key: SPOTIFY_SECRET
+        - name: CORS
+          valueFrom:
+            secretKeyRef:
+              name: your-spotify-secrets
+              key: CORS
+        - name: MONGO_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: your-spotify-secrets
+              key: MONGO_ENDPOINT
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
