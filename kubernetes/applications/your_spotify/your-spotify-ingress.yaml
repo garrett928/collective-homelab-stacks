@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: your-spotify-ui
-  namespace: media
+  namespace: your-spotify
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
