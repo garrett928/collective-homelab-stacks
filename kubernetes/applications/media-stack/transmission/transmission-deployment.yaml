@@ -39,7 +39,7 @@ spec:
             - name: VPN_TYPE
               value: "wireguard"
             - name: WIREGUARD_MTU
-              value: "1280"
+              value: "1300"
             - name: WIREGUARD_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
