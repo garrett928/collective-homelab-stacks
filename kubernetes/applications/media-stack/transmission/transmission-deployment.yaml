@@ -55,8 +55,8 @@ spec:
                 secretKeyRef:
                   name: media-secrets
                   key: WIREGUARD_ADDRESSES
-            - name: SERVER_REGIONS
-              value: "America"
+            - name: SERVER_COUNTRIES
+              value: "United States"
             - name: FIREWALL_OUTBOUND_SUBNETS
               value: "192.168.0.0/16,10.0.0.0/8"
             - name: TZ
