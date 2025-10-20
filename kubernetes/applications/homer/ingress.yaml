@@ -3,8 +3,7 @@ kind: Ingress
 metadata:
   name: homer-ui
   namespace: homer
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "true"
+
 spec:
   rules:
     - host: homer.ghart.space
@@ -17,7 +16,3 @@ spec:
                 name: homer
                 port:
                   number: 80
-  tls:
-    - hosts:
-        - homer.ghart.space
-      secretName: homer-tls
