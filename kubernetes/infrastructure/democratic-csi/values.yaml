@@ -5,6 +5,8 @@ democratic-csi:
 
   # Use existing secret for driver configuration
   driver:
+    config:
+      driver: freenas-api-nfs
     existingConfigSecret: truenas-csi-driver-config
 
   # Controller (provisioner) configuration
