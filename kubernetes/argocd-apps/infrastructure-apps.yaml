@@ -112,6 +112,52 @@ spec:
       jsonPointers:
         - /metadata/labels
         - /metadata/annotations
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: snapshot-controller
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/garrett928/collective-homelab-stacks.git
+    targetRevision: HEAD
+    path: kubernetes/infrastructure/snapshot-controller
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: democratic-csi-nfs
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/garrett928/collective-homelab-stacks.git
+    targetRevision: HEAD
+    path: kubernetes/infrastructure/democratic-csi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: democratic-csi
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
 # ---
 # apiVersion: argoproj.io/v1alpha1
 # kind: Application

@@ -1,0 +1,97 @@
+democratic-csi:
+  # CSI Driver Configuration
+  csiDriver:
+    name: "org.democratic-csi.nfs"
+
+  # Driver Configuration for TrueNAS SCALE with NFS
+  driver:
+    config:
+      driver: freenas-api-nfs
+      httpConnection:
+        protocol: https
+        host: truenas.ghart.space
+        port: 443
+        allowInsecure: true
+        # API key is injected from secret via extraEnv below
+      zfs:
+        datasetParentName: tank/k8s-pvs
+        detachedSnapshotsDatasetParentName: tank/k8s-pvs-snapshots
+        datasetEnableQuotas: true
+        datasetEnableReservation: false
+        datasetPermissionsMode: "0755"
+        datasetPermissionsUser: 4000
+        datasetPermissionsGroup: 4000
+      nfs:
+        shareCommentTemplate: "{{ parameters.[csi.storage.k8s.io/pvc/namespace] }}-{{ parameters.[csi.storage.k8s.io/pvc/name] }}"
+        shareHost: truenas.ghart.space
+        shareAlldirs: false
+        shareAllowedHosts: []
+        shareAllowedNetworks: []
+        shareMaprootUser: root
+        shareMaprootGroup: root
+        shareMapallUser: ""
+        shareMapallGroup: ""
+    extraEnv:
+      - name: API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: truenas-api-key
+            key: api-key
+
+  # Controller (provisioner) configuration
+  controller:
+    enabled: true
+    strategy: deployment
+    externalProvisioner:
+      extraArgs:
+        - --leader-election=true
+        - --node-deployment=true
+        - --feature-gates=Topology=true
+        - --strict-topology=true
+    externalResizer:
+      enabled: true
+    externalSnapshotter:
+      enabled: true
+      extraArgs:
+        - --leader-election=true
+        - --node-deployment=true
+
+  # Node configuration
+  node:
+    driver:
+      extraEnv:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: truenas-api-key
+              key: api-key
+    hostPID: true
+    # Required for privileged operations
+    driverRegistrar:
+      enabled: true
+
+  # Storage Classes
+  storageClasses:
+    - name: truenas-nfs
+      defaultClass: false
+      reclaimPolicy: Retain
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        fsType: nfs
+      mountOptions:
+        - noatime
+        - nfsvers=4
+      secrets:
+        provisioner-secret:
+        controller-publish-secret:
+        node-stage-secret:
+        node-publish-secret:
+        controller-expand-secret:
+
+  # Volume Snapshot Classes
+  volumeSnapshotClasses:
+    - name: truenas-nfs
+      deletionPolicy: Delete
+      parameters:
+        detachedSnapshots: "true"

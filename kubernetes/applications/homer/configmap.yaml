@@ -150,7 +150,7 @@ data:
             logo: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/pi-hole.png"
             subtitle: "DNS & Ad Blocking"
             tag: "network"
-            url: "https://pihole.ghart.space"
+            url: "http://pihole.ghart.space"
             target: "_blank"
 
           - name: "PiKVM"
