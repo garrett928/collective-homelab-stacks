@@ -4,34 +4,10 @@ democratic-csi:
     name: "org.democratic-csi.nfs"
 
   # Driver Configuration for TrueNAS SCALE with NFS
+  # Use existing secret that contains the full driver config with API key
   driver:
-    config:
-      driver: freenas-api-nfs
-      instance_id:
-      httpConnection:
-        protocol: https
-        host: truenas.ghart.space
-        port: 443
-        allowInsecure: true
-        apiKey:
-      zfs:
-        datasetParentName: tank/k8s-pvs
-        detachedSnapshotsDatasetParentName: tank/k8s-pvs-snapshots
-        datasetEnableQuotas: true
-        datasetEnableReservation: false
-        datasetPermissionsMode: "0755"
-        datasetPermissionsUser: 4000
-        datasetPermissionsGroup: 4000
-      nfs:
-        shareCommentTemplate: "{{ parameters.[csi.storage.k8s.io/pvc/namespace] }}-{{ parameters.[csi.storage.k8s.io/pvc/name] }}"
-        shareHost: truenas.ghart.space
-        shareAlldirs: false
-        shareAllowedHosts: []
-        shareAllowedNetworks: []
-        shareMaprootUser: root
-        shareMaprootGroup: root
-        shareMapallUser: ""
-        shareMapallGroup: ""
+    existingConfigSecret: truenas-csi-driver-config
+    config: {}
 
   # Controller (provisioner) configuration
   controller:
@@ -70,14 +46,6 @@ democratic-csi:
       mountOptions:
         - noatime
         - nfsvers=4
-      secrets:
-        provisioner-secret:
-        controller-publish-secret:
-        node-stage-secret:
-          apiKey: truenas-api-key/api-key
-        node-publish-secret:
-          apiKey: truenas-api-key/api-key
-        controller-expand-secret:
 
   # Volume Snapshot Classes
   volumeSnapshotClasses:
