@@ -7,12 +7,13 @@ democratic-csi:
   driver:
     config:
       driver: freenas-api-nfs
+      instance_id:
       httpConnection:
         protocol: https
         host: truenas.ghart.space
         port: 443
         allowInsecure: true
-        apiKey: "${API_KEY}"
+        apiKey:
       zfs:
         datasetParentName: tank/k8s-pvs
         detachedSnapshotsDatasetParentName: tank/k8s-pvs-snapshots
@@ -31,12 +32,6 @@ democratic-csi:
         shareMaprootGroup: root
         shareMapallUser: ""
         shareMapallGroup: ""
-    extraEnv:
-      - name: API_KEY
-        valueFrom:
-          secretKeyRef:
-            name: truenas-api-key
-            key: api-key
 
   # Controller (provisioner) configuration
   controller:
@@ -58,13 +53,6 @@ democratic-csi:
 
   # Node configuration
   node:
-    driver:
-      extraEnv:
-        - name: API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: truenas-api-key
-              key: api-key
     hostPID: true
     # Required for privileged operations
     driverRegistrar:
@@ -86,7 +74,9 @@ democratic-csi:
         provisioner-secret:
         controller-publish-secret:
         node-stage-secret:
+          apiKey: truenas-api-key/api-key
         node-publish-secret:
+          apiKey: truenas-api-key/api-key
         controller-expand-secret:
 
   # Volume Snapshot Classes
