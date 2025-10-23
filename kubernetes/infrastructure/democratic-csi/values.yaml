@@ -38,6 +38,9 @@ democratic-csi:
   controller:
     enabled: true
     strategy: deployment
+    extraEnv:
+      - name: DEMOCRATIC_CSI_CONFIG_SECRET
+        value: "truenas-api-key"
     externalProvisioner:
       extraArgs:
         - --leader-election=true
