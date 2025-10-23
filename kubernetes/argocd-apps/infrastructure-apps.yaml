@@ -162,6 +162,13 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: democratic-csi
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: democratic-csi-nfs-driver-config
+      namespace: democratic-csi
+      jsonPointers:
+        - /data
   syncPolicy:
     automated:
       prune: true
