@@ -12,7 +12,7 @@ democratic-csi:
         host: truenas.ghart.space
         port: 443
         allowInsecure: true
-        # API key is injected from secret via extraEnv below
+        apiKey: "${API_KEY}"
       zfs:
         datasetParentName: tank/k8s-pvs
         detachedSnapshotsDatasetParentName: tank/k8s-pvs-snapshots
