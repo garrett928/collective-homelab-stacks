@@ -14,7 +14,7 @@ democratic-csi:
         port: 443
         allowInsecure: true
         # API key will be patched post-deployment via kubectl
-        apiKey: "1-ihxj7UK0FwOiQZejvIeuvlrjUAEFn7nlypsYeBRhdQOqjSTMUuDBkYwaVGnyYVe5"
+        apiKey: ""
       zfs:
         datasetParentName: tank/k8s-pvs
         detachedSnapshotsDatasetParentName: tank/k8s-pvs-snapshots
