@@ -1,21 +1,31 @@
 kube-prometheus-stack:
   # Install CRDs separately (avoid Argo CD long-annotation issue on CRDs)
   installCRDs: false
-  
+
   # CRDs are managed outside the chart
   crds:
     enabled: false
-  
+
   prometheus:
     prometheusSpec:
       storageSpec:
         volumeClaimTemplate:
           spec:
-            storageClassName: longhorn
+            storageClassName: truenas-nfs-retain
             resources:
               requests:
-                storage: 10Gi
-      retention: 30d
+                storage: 100Gi
+      retention: 90d
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - b8s-02
     ingress:
       enabled: true
       annotations:
