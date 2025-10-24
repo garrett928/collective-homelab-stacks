@@ -143,44 +143,47 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 1m
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: democratic-csi-nfs
-  namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/garrett928/collective-homelab-stacks.git
-    targetRevision: HEAD
-    path: kubernetes/infrastructure/democratic-csi
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: democratic-csi
-  ignoreDifferences:
-    - group: ""
-      kind: Secret
-      name: democratic-csi-nfs-driver-config
-      namespace: democratic-csi
-      jsonPointers:
-        - /data
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-    retry:
-      limit: 5
-      backoff:
-        duration: 10s
-        factor: 2
-        maxDuration: 3m
+# ---
+# Democratic CSI is now managed manually outside of ArgoCD
+# See kubernetes/infrastructure/democratic-csi/README.md for deployment instructions
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: democratic-csi-nfs
+#   namespace: argocd
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "2"
+#   finalizers:
+#     - resources-finalizer.argocd.argoproj.io
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/garrett928/collective-homelab-stacks.git
+#     targetRevision: HEAD
+#     path: kubernetes/infrastructure/democratic-csi
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: democratic-csi
+#   ignoreDifferences:
+#     - group: ""
+#       kind: Secret
+#       name: democratic-csi-nfs-driver-config
+#       namespace: democratic-csi
+#       jsonPointers:
+#         - /data
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#     retry:
+#       limit: 5
+#       backoff:
+#         duration: 10s
+#         factor: 2
+#         maxDuration: 3m
 # ---
 # apiVersion: argoproj.io/v1alpha1
 # kind: Application
