@@ -16,7 +16,18 @@ democratic-csi:
         tag: next
 
   storageClasses:
-    - name: truenas-nfs
+    - name: truenas-nfs-retain
+      defaultClass: false
+      reclaimPolicy: Retain
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        fsType: nfs
+      mountOptions:
+        - noatime
+        - nfsvers=3
+        - nolock
+    - name: truenas-nfs-delete
       defaultClass: false
       reclaimPolicy: Delete
       volumeBindingMode: Immediate
