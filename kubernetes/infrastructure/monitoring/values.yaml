@@ -42,7 +42,7 @@ kube-prometheus-stack:
     persistence:
       enabled: true
       storageClassName: longhorn
-      size: 5Gi
+      size: 1Gi
     ingress:
       enabled: true
       annotations:
