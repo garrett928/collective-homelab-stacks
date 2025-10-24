@@ -43,6 +43,8 @@ kube-prometheus-stack:
       enabled: true
       storageClassName: longhorn
       size: 5Gi
+      # Use existing PVC to avoid ArgoCD trying to recreate it
+      existingClaim: testing-grafana
     ingress:
       enabled: true
       annotations:
