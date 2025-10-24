@@ -1,81 +1,33 @@
 democratic-csi:
-  # CSI Driver Configuration
+  namespaceOverride: democratic-csi
+
   csiDriver:
     name: "org.democratic-csi.nfs"
+    fsGroupPolicy: File
 
-  # Driver Configuration for TrueNAS SCALE with NFS
   driver:
+    existingConfigSecret: truenas-nfs-driver-config
     config:
       driver: freenas-api-nfs
-      instance_id:
-      httpConnection:
-        protocol: https
-        host: truenas.ghart.space
-        port: 443
-        allowInsecure: true
-        # API key will be patched post-deployment via kubectl
-        apiKey: ""
-      zfs:
-        datasetParentName: tank/k8s-pvs
-        detachedSnapshotsDatasetParentName: tank/k8s-pvs-snapshots
-        datasetEnableQuotas: true
-        datasetEnableReservation: false
-        datasetPermissionsMode: "0755"
-        datasetPermissionsUser: 4000
-        datasetPermissionsGroup: 4000
-      nfs:
-        shareCommentTemplate: "{{ parameters.[csi.storage.k8s.io/pvc/namespace] }}-{{ parameters.[csi.storage.k8s.io/pvc/name] }}"
-        shareHost: truenas.ghart.space
-        shareAlldirs: false
-        shareAllowedHosts: []
-        shareAllowedNetworks: []
-        shareMaprootUser: root
-        shareMaprootGroup: root
-        shareMapallUser: ""
-        shareMapallGroup: ""
 
-  # Controller (provisioner) configuration
   controller:
-    enabled: true
-    strategy: deployment
-    extraEnv:
-      - name: DEMOCRATIC_CSI_CONFIG_SECRET
-        value: "truenas-api-key"
-    externalProvisioner:
-      extraArgs:
-        - --leader-election=true
-        - --node-deployment=true
-        - --feature-gates=Topology=true
-        - --strict-topology=true
-    externalResizer:
-      enabled: true
-    externalSnapshotter:
-      enabled: true
-      extraArgs:
-        - --leader-election=true
-        - --node-deployment=true
+    driver:
+      image:
+        tag: next
 
-  # Node configuration
-  node:
-    hostPID: true
-    # Required for privileged operations
-    driverRegistrar:
-      enabled: true
-
-  # Storage Classes
   storageClasses:
     - name: truenas-nfs
       defaultClass: false
-      reclaimPolicy: Retain
+      reclaimPolicy: Delete
       volumeBindingMode: Immediate
       allowVolumeExpansion: true
       parameters:
         fsType: nfs
       mountOptions:
         - noatime
-        - nfsvers=4
+        - nfsvers=3
+        - nolock
 
-  # Volume Snapshot Classes
   volumeSnapshotClasses:
     - name: truenas-nfs
       deletionPolicy: Delete
