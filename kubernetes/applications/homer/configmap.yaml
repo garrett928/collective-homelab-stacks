@@ -91,6 +91,13 @@ data:
             url: "https://alertmanager.ghart.space"
             target: "_blank"
 
+          - name: "Grafana"
+            logo: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/grafana.png"
+            subtitle: "Dashboards & Visualization"
+            tag: "infrastructure"
+            url: "https://grafana.ghart.space"
+            target: "_blank"
+
       - name: "Proxmox Hypervisors"
         icon: "fas fa-hdd"
         items:
@@ -213,6 +220,13 @@ data:
             subtitle: "Download Client"
             tag: "media"
             url: "https://transmission.ghart.space"
+            target: "_blank"
+
+          - name: "Jellyfin"
+            logo: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/jellyfin.png"
+            subtitle: "Media Server"
+            tag: "media"
+            url: "http://jellyfin.ghart.space:8096/web/#/home.html"
             target: "_blank"
 
       - name: "Applications"
