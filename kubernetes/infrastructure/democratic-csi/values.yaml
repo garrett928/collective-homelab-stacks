@@ -3,7 +3,7 @@ democratic-csi:
 
   csiDriver:
     name: "org.democratic-csi.nfs"
-    fsGroupPolicy: None
+    fsGroupPolicy: File
 
   driver:
     existingConfigSecret: truenas-nfs-driver-config
