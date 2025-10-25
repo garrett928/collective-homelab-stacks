@@ -25,7 +25,7 @@ kube-prometheus-stack:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - b8s-02
+                      - b8s-01
     ingress:
       enabled: true
       annotations:
@@ -43,6 +43,16 @@ kube-prometheus-stack:
       enabled: false
       storageClassName: longhorn
       size: 2Gi
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - b8s-01
     ingress:
       enabled: true
       annotations:
@@ -64,6 +74,16 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 2Gi
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - b8s-01
     ingress:
       enabled: true
       annotations:
