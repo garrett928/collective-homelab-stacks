@@ -14,20 +14,20 @@ This guide covers the complete setup of my homelab infrastructure using Infrastr
    ```bash
    # Edit the inventory file
    nano automation/ansible/inventories/host-inventory.yml
-   
+
    # Update with your server details:
    # - IP address
-   # - Username  
+   # - Username
    # - SSH key path
    ```
 
 2. **Install Docker and Portainer**:
    ```bash
    cd automation/ansible
-   
+
    # Install Docker
    ansible-playbook ./playbooks/ubuntu/docker-host.yml --ask-become-pass -i ./inventories/host-inventory.yml
-   
+
    # Deploy Portainer with Traefik
    ansible-playbook ./playbooks/deploy-portainer.yml --ask-become-pass -i ./inventories/host-inventory.yml
    ```
@@ -62,7 +62,7 @@ monica.ghart.space      → [your-server-ip]
 
 1. **Access Portainer**: Navigate to `https://portainer.ghart.space`
 
-2. **Configure GitOps**: 
+2. **Configure GitOps**:
    - Go to GitOps → Add repository
    - Add this repository URL
    - Configure authentication if needed
@@ -95,7 +95,7 @@ monica.ghart.space      → [your-server-ip]
 
 ### Service Discovery
 - **Public Services**: Routed via Traefik with Let's Encrypt certificates
-- **Metrics Endpoints**: 
+- **Metrics Endpoints**:
   - Node Exporter: `/nodeexporter/metrics`
   - cAdvisor: `/cadvisor/metrics`
 

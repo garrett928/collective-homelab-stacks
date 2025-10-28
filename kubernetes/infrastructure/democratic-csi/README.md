@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains the configuration for deploying [Democratic CSI](https://github.com/democratic-csi/democratic-csi) 
+This directory contains the configuration for deploying [Democratic CSI](https://github.com/democratic-csi/democratic-csi)
 to provide persistent storage for Kubernetes from TrueNAS SCALE using NFS.
 
 **Based on**: [TrueNAS backed PVCs on Talos Kubernetes using Democratic CSI](https://wazaari.dev/blog/truenas-talos-democratic-csi)
@@ -51,6 +51,7 @@ to provide persistent storage for Kubernetes from TrueNAS SCALE using NFS.
    - Check: `kubectl get deploy -n kube-system snapshot-controller`
 
 2. **Namespace labels** (if using pod security policies)
+
    ```bash
    kubectl label namespace democratic-csi pod-security.kubernetes.io/enforce=privileged
    ```
@@ -71,12 +72,16 @@ cd kubernetes/infrastructure/democratic-csi
 
 # Or manually:
 kubectl apply -f truenas-nfs-driver-config.yaml
+
 ```
 
 Verify the secret was created:
+
 ```bash
 kubectl get secret truenas-nfs-driver-config -n democratic-csi
+
 ```
+
 
 ### Step 2: Sync ArgoCD
 
@@ -84,68 +89,87 @@ The ArgoCD application is already configured in `kubernetes/argocd-apps/infrastr
 and will automatically sync when you push to git.
 
 Trigger an immediate sync:
+
 ```bash
 # Sync the root app (which includes democratic-csi-nfs)
 argocd app sync root-app
 
 # Or sync just the democratic-csi app
 argocd app sync democratic-csi-nfs
+
 ```
 
 ### Step 3: Verify Deployment
 
 Wait for pods to be ready:
+
 ```bash
 kubectl get pods -n democratic-csi -w
+
 ```
 
 Expected output:
-```
+
+```text
 NAME                                            READY   STATUS    RESTARTS   AGE
 democratic-csi-nfs-controller-xxxxxxxxxx-xxxxx  6/6     Running   0          2m
 democratic-csi-nfs-node-xxxxx                   4/4     Running   0          2m
 democratic-csi-nfs-node-xxxxx                   4/4     Running   0          2m
 democratic-csi-nfs-node-xxxxx                   4/4     Running   0          2m
+
 ```
 
 Check storage class:
+
 ```bash
 kubectl get sc truenas-nfs
+
 ```
 
 Check volume snapshot class:
+
 ```bash
 kubectl get volumesnapshotclass truenas-nfs
+
 ```
 
 ## Testing
 
 Deploy a test PVC and pod:
+
 ```bash
 kubectl apply -f test-pvc-pod.yaml
+
 ```
 
 Watch the PVC bind:
+
 ```bash
 kubectl get pvc -n democratic-csi-test -w
+
 ```
 
 Exec into the test pod and create a file:
+
 ```bash
 kubectl exec -it storage-test-pod -n democratic-csi-test -- sh
 / # echo "Hello from Kubernetes!" > /data/test.txt
 / # cat /data/test.txt
 / # exit
+
 ```
 
 **Verify on TrueNAS**:
+
 - Navigate to Datasets → you should see `tank/k8s-pvs/pvc-xxxxx`
 - Navigate to Shares → NFS → you should see an NFS share for the PVC
 - The share comment should show `democratic-csi-test-test-pvc`
 
 Cleanup:
+
 ```bash
 kubectl delete -f test-pvc-pod.yaml
+
 ```
 
 ## Configuration Details
@@ -211,11 +235,14 @@ From `values.yaml`:
 ### Controller CrashLoopBackOff
 
 Check logs:
+
 ```bash
 kubectl logs -n democratic-csi deployment/democratic-csi-nfs-controller -c csi-driver
+
 ```
 
 Common issues:
+
 - Secret not created or misconfigured
 - TrueNAS API unreachable
 - Invalid API key
@@ -224,20 +251,26 @@ Common issues:
 ### PVC Stuck in Pending
 
 Check events:
+
 ```bash
 kubectl describe pvc <pvc-name> -n <namespace>
+
 ```
 
 Check provisioner logs:
+
 ```bash
 kubectl logs -n democratic-csi deployment/democratic-csi-nfs-controller -c csi-provisioner
+
 ```
 
 ### Mount Failures
 
 Check node logs:
+
 ```bash
 kubectl logs -n democratic-csi daemonset/democratic-csi-nfs-node -c csi-driver
+
 ```
 
 Verify NFS service is running on TrueNAS and shares are created.

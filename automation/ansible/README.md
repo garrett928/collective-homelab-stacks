@@ -396,7 +396,7 @@ ansible-playbook playbooks/ubuntu/proxmox-guest-agent.yml -i inventories/host-in
 The playbooks use Jinja2 templates for configuration:
 
 - **`node_exporter.service.j2`:** Systemd service for Node Exporter
-- **`promtail.service.j2`:** Systemd service for Promtail  
+- **`promtail.service.j2`:** Systemd service for Promtail
 - **`promtail-config.yaml.j2`:** Promtail configuration with log scraping rules
 
 ---
@@ -466,7 +466,7 @@ For new server setup, run in this order:
 ## Links
 
 - [ansible docs](https://docs.ansible.com/ansible/latest/getting_started/index.html)
-- [dnf module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/dnf_module.html) - for installing packeges and upgrading the system  
+- [dnf module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/dnf_module.html) - for installing packeges and upgrading the system
 - [ssh key module](https://docs.ansible.com/ansible/latest/collections/ansible/posix/authorized_key_module.html)
 - [gnome configuration](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/systemd_module.html)
   - You'll likely need to install the collection with `ansible-galaxy collection install community.general`
@@ -475,8 +475,8 @@ For new server setup, run in this order:
 
 ## Commands
 
-- `ansible all --list-hosts -i ./host-inventory.yml`  
-- `ansible -i inventory-file groupname -m ping --user username --ask-pass`  
-    `-m` is for a module, in this case its ping. `--user` is a user on the remote machine  
+- `ansible all --list-hosts -i ./host-inventory.yml`
+- `ansible -i inventory-file groupname -m ping --user username --ask-pass`
+    `-m` is for a module, in this case its ping. `--user` is a user on the remote machine
 - `ansible-playbook playbook-path --user username --ask-pass --ask-become-pass -i inventory-file`  this will ask for the ssh password and the sudo password for the user
 - `ansible-playbook discord-local-install.yml --user ghart --ask-become-pass` Running a playbook on localhost with become privilege

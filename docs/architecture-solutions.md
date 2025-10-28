@@ -5,12 +5,14 @@
 ### Core Architecture
 
 **Server 1 (Ryzen 5 7600X/B650):**
+
 - Proxmox VE as hypervisor
 - Critical VMs (finance tracking, home automation)
 - Windows VM with P2000 passthrough for PCB design
 - Container host VMs with Portainer
 
 **Server 2 (i7-10700F/B460M):**
+
 - Proxmox VE as hypervisor
 - TrueNAS Scale VM with PCI passthrough of storage controller
 - 4x12TB drives in RAIDZ2 (~20TB usable) for media and general storage
@@ -18,16 +20,19 @@
 - Docker/LXC containers for Plex/Jellyfin with 3070 passthrough for transcoding
 
 **Mini PCs:**
+
 - Lenovo: Proxmox cluster member for small management VMs
 - Dell: Dedicated backup controller/management services
 
 ### Networking Improvements
+
 - Add 10Gb direct connection between servers:
   - PCIe 10Gb NICs (~$50-100 used on eBay)
   - Direct connection (no switch needed)
   - Configure as separate network in Proxmox for VM migrations and storage traffic
 
 ### TrueNAS VM Configuration
+
 - Minimum 16GB RAM allocated
 - 4-8 vCPUs
 - Pass through the entire storage controller (not individual drives)
@@ -55,6 +60,7 @@
    - Configure periodic replication from main TrueNAS
 
 ### Pros
+
 - Highly efficient resource utilization
 - Direct PCI passthrough preserves most TrueNAS performance
 - Proxmox clustering enables live migration for updates
@@ -62,6 +68,7 @@
 - More flexible GPU allocation (can move between VMs if needed)
 
 ### Cons
+
 - Recovery complexity if hypervisor fails
 - Risk of data corruption if improper shutdown occurs
 - VM overhead (though minimal with direct passthrough)
@@ -70,15 +77,17 @@
 
 ## Option 3: TrueNAS Scale + Kubernetes Integration
 
-### Core Architecture
+### Architecture Overview
 
 **Server 1 (Ryzen 5 7600X/B650):**
+
 - Proxmox VE
 - Windows VM with P2000 passthrough
 - K3s control plane nodes (3 VMs for proper HA)
 - Critical application VMs that shouldn't be containerized
 
 **Server 2 (i7-10700F/B460M):**
+
 - TrueNAS SCALE bare metal
 - 4x12TB in RAIDZ2
 - 14TB as separate pool for backups
@@ -86,12 +95,14 @@
 - RTX 3070 for Plex/Jellyfin transcoding (via built-in apps)
 
 **Mini PCs:**
+
 - Both configured as additional k3s worker nodes
 - Join the same cluster as TrueNAS SCALE's built-in k3s
 
 ### Integration Strategy
 
 TrueNAS SCALE has built-in Kubernetes capabilities:
+
 1. It runs k3s natively (no need for separate worker node setup)
 2. Configure it to join your k3s cluster from Server 1
 3. Use built-in TrueNAS apps for Plex/Jellyfin with GPU acceleration
@@ -110,6 +121,7 @@ TrueNAS SCALE has built-in Kubernetes capabilities:
    - Deploy using StatefulSets with PVCs
    - Storage remains on TrueNAS but is accessible cluster-wide
    - Example config:
+
    ```yaml
    kind: StorageClass
    apiVersion: storage.k8s.io/v1
@@ -141,7 +153,8 @@ TrueNAS SCALE has built-in Kubernetes capabilities:
    - Use Flux or ArgoCD for declarative deployments
    - Velero for k8s cluster state backups
 
-### Pros
+### Advantages
+
 - Native integration between storage and container orchestration
 - Better isolation of storage service (bare metal)
 - Built-in GPU support for applications
@@ -149,7 +162,8 @@ TrueNAS SCALE has built-in Kubernetes capabilities:
 - Storage redundancy at ZFS level
 - Reproducible deployments via GitOps
 
-### Cons
+### Disadvantages
+
 - Limited flexibility for storage hardware changes
 - Network bottleneck between k8s nodes and storage
 - More complex initial setup
@@ -162,6 +176,7 @@ TrueNAS SCALE has built-in Kubernetes capabilities:
 Given your emphasis on reliability for financial tracking and home automation, plus your interest in Infrastructure as Code, **I recommend Option 3 with some modifications**:
 
 ### Recommended Architecture
+
 - Use TrueNAS SCALE bare metal on Server 2 for maximum storage reliability
 - Implement full GitOps workflow for all containerized applications
 - Add a direct 10Gb connection between servers (~$100 investment that dramatically improves performance)
@@ -169,7 +184,9 @@ Given your emphasis on reliability for financial tracking and home automation, p
 - Keep the 14TB drive separate from your main array for backups of critical data
 
 ### Why This Approach
+
 This gives you:
+
 1. **Rock-solid storage foundation** - Bare metal TrueNAS SCALE eliminates virtualization layer risks
 2. **Full reproducibility through code** - GitOps ensures all configurations are version controlled
 3. **Better network performance** - Direct 10Gb connection between servers improves storage access
@@ -177,6 +194,7 @@ This gives you:
 5. **Kubernetes for container orchestration** - Proper HA for your critical services
 
 ### Implementation Priority
+
 1. Set up TrueNAS SCALE on Server 2 with storage array
 2. Install Proxmox on Server 1 and configure Windows VM
 3. Add 10Gb networking between servers
@@ -188,9 +206,10 @@ This gives you:
 
 ## Option 3B: Virtualized TrueNAS with Vanilla K3s
 
-### Core Architecture
+### Architecture Details
 
 **Server 2 (i7-10700F/B460M):**
+
 - Proxmox VE as hypervisor
 - TrueNAS SCALE VM with full PCI passthrough of storage controller
 - 4x12TB drives in RAIDZ2 (~20TB usable) for media and general storage
@@ -199,18 +218,21 @@ This gives you:
 - RTX 3070 shared between VMs via GPU partitioning or passed to specific VM
 
 **Server 1 (Ryzen 5 7600X/B650):**
+
 - Proxmox VE hypervisor
 - Primary k3s control plane node (1-3 VMs for HA)
 - Windows VM with P2000 passthrough
 - Additional service VMs as needed
 
 **Mini PCs:**
+
 - Additional k3s worker nodes
 - Monitoring and backup services
 
 ### Storage Integration Options
 
 #### 1. Democratic CSI Driver (Recommended)
+
 - Deploy the [Democratic CSI driver](https://github.com/democratic-csi/democratic-csi) in your k3s cluster
 - Configure it to talk to TrueNAS API (works with both CORE and SCALE)
 - Provides native k8s PV/PVC storage provisioning
@@ -233,6 +255,7 @@ parameters:
 ```
 
 #### 2. Longhorn with TrueNAS Backend
+
 - Deploy Longhorn in your k3s cluster
 - Configure Longhorn to use TrueNAS-provided storage via NFS/iSCSI
 - Gives you distributed storage while leveraging TrueNAS ZFS protection
@@ -249,13 +272,14 @@ parameters:
   - Cluster traffic (between k3s nodes)
   - Management traffic
 
-### TrueNAS VM Configuration
+### TrueNAS VM Setup
+
 - Minimum 16GB RAM allocated (same as Option 2, since k3s pods run on separate VMs)
 - 4-8 vCPUs
 - Pass through the entire storage controller (not individual drives)
-- Dedicated virtio network adapters for storage and cluster traffic
+  - Dedicated virtio network adapters for storage and cluster traffic
 
-### Backup and Recovery Solution
+### Backup Strategy
 
 1. **VM Backup Strategy:**
    - Use Proxmox Backup Server (PBS) on Dell mini PC
@@ -301,7 +325,8 @@ parameters:
    - Set up Velero for k8s backups
    - Test recovery procedures
 
-### Pros
+### Benefits
+
 - **Full control over k3s**: Use latest vanilla k3s with your preferred configurations
 - **GitOps friendly**: Consistent with your approach for everything in git
 - **Resource flexibility**: Can adjust resource allocation between VMs as needed
@@ -309,7 +334,8 @@ parameters:
 - **Independent scaling**: Can scale compute and storage independently
 - **Ansible integration**: Fits perfectly with your existing automation approach
 
-### Cons
+### Drawbacks
+
 - **Additional complexity**: More moving parts than bare metal TrueNAS
 - **Storage latency**: Slight performance penalty due to virtualization
 - **Recovery complexity**: More complex recovery procedure
@@ -330,12 +356,14 @@ parameters:
 ### Recommendation for Option 3B
 
 This approach is ideal if you:
+
 - Want full control over your k3s cluster
 - Prefer consistency in your GitOps/Ansible approach
 - Are comfortable with additional complexity for flexibility
 - Plan to iterate and evolve your cluster configuration frequently
 
 The key to success with this option is:
+
 1. Proper resource allocation between VMs
 2. 10Gb networking for storage performance
 3. Comprehensive backup strategy
@@ -350,21 +378,27 @@ Based on your feedback about resilient node architecture and resource optimizati
 ### Storage Strategy by Application
 
 #### TrueNAS CSI (Large Data, Critical Storage)
+
 ```yaml
+
 # Applications requiring large storage or critical data reliability
+
 - Jellyfin media library (~15-20TB) - NFS mount to media datasets
 - Plex/Jellyfin config (small but critical) - NFS for backup integration
 - BookStack database (MariaDB) - iSCSI for database performance
-- Monica database (MySQL) - iSCSI for database performance 
+- Monica database (MySQL) - iSCSI for database performance
 - Prometheus metrics (long-term storage) - NFS for snapshot benefits
 - Grafana data (dashboards/configs) - NFS for backup integration
 ```
 
 #### Longhorn (Small Configs, High Availability with Cross-Host Replication)
+
 ```yaml
+
 # Applications needing HA but small storage footprint
+
 - Radarr/Sonarr/Prowlarr configs (each ~100MB) - 3 replicas across hosts
-- Portainer configs - 3 replicas for management reliability  
+- Portainer configs - 3 replicas for management reliability
 - Dashy configs - 3 replicas for dashboard availability
 - InfluxDB data - 3 replicas, can handle host failures
 - Nginx configs - 3 replicas for web serving HA
@@ -374,11 +408,13 @@ Based on your feedback about resilient node architecture and resource optimizati
 ### Resilient Node Assignment Strategy (Combined Control+Worker)
 
 #### Server 1 (Ryzen 5 7600X) - Critical Apps & Storage
+
 ```yaml
 VMs:
+
   - truenas-vm: 8GB RAM, 4 vCPU, storage controller passthrough
   - k3s-node-1: 4GB RAM, 2 vCPU (control+worker)
-  - k3s-node-2: 4GB RAM, 2 vCPU (control+worker) 
+  - k3s-node-2: 4GB RAM, 2 vCPU (control+worker)
   - windows-vm: 12GB RAM, 4 vCPU, P2000 passthrough
   - Proxmox overhead: ~4GB
   - Buffer: 33GB available for expansion
@@ -390,8 +426,10 @@ Node Labels:
 ```
 
 #### Server 2 (i7-10700F) - Compute & Processing
+
 ```yaml
 VMs:
+
   - k3s-compute-node: 8GB RAM, 4 vCPU, RTX 3070 passthrough (control+worker)
   - k3s-node-3: 4GB RAM, 2 vCPU (control+worker)
   - Proxmox overhead: ~2GB
@@ -406,12 +444,15 @@ Node Labels:
 ```
 
 #### Mini PCs - Distributed Control+Workers
+
 ```yaml
 Lenovo ThinkCentre (Ryzen 5 Pro, 12GB RAM):
+
   - k3s-node-4: 10GB RAM (control+worker)
   - Labels: topology.kubernetes.io/zone=mini-lenovo, role=control-worker
 
 Dell Optiplex (i7-4785T, 16GB RAM):
+
   - k3s-node-5: 12GB RAM (control+worker) + 4GB for backup services
   - Labels: topology.kubernetes.io/zone=mini-dell, role=control-worker, backup=primary
 ```
@@ -419,8 +460,11 @@ Dell Optiplex (i7-4785T, 16GB RAM):
 ### Smart Longhorn Configuration for Cross-Host Replication
 
 #### Cross-Host Anti-Affinity Configuration
+
 ```yaml
+
 # Configure Longhorn for cross-host replication
+
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -431,6 +475,7 @@ parameters:
   dataLocality: "best-effort"
 
 # Enable replica anti-affinity settings
+
 apiVersion: longhorn.io/v1beta2
 kind: Setting
 metadata:
@@ -438,8 +483,9 @@ metadata:
 value: "true"
 
 # Zone-based anti-affinity for physical host separation
+
 apiVersion: longhorn.io/v1beta2
-kind: Setting  
+kind: Setting
 metadata:
   name: replica-zone-soft-anti-affinity
 value: "true"
@@ -448,54 +494,69 @@ value: "true"
 # - No two replicas on nodes within same Proxmox host
 # - Data available even if entire Proxmox server goes down
 # - Automatic replica distribution across zones
+
 ```
 
 ### GPU Workload Strategy - Dedicated Compute Node
 
 #### RTX 3070 Assignment
+
 ```yaml
+
 # Single compute VM with GPU passthrough on Server 2
+
 k3s-compute-node:
   GPU: RTX 3070 (full passthrough)
   Use Cases:
+
     - Jellyfin/Plex transcoding (primary)
     - Ollama/ML workloads (secondary)
     - Any GPU-accelerated processing
-  
+
 # Pod scheduling for GPU workloads
+
 nodeSelector:
   compute-capable: "true"
 resources:
   limits:
     nvidia.com/gpu: 1
-    
+
 # No GPU splitting - keeps things simple and performant
+
 ```
 
 ### Simplified Network Configuration
 
 #### Single Physical Network with Direct 10Gb Link
+
 ```yaml
+
 # Primary network (existing LAN)
+
 cluster-network: 192.168.1.0/24  # Your existing network
 
 # Direct 10Gb connection between servers only
+
 server1-server2-direct: 10.0.0.0/30  # Point-to-point for storage traffic
 
 # No complex VLANs initially - can add later if needed
 # QoS prioritization:
 # 1. Storage traffic (highest priority)
-# 2. Kubernetes control traffic (high priority) 
+# 2. Kubernetes control traffic (high priority)
 # 3. General traffic (default priority)
 
 # Mini PCs remain on 1Gb connection to existing network
+
 ```
 
 ### Optimized StorageClass Definitions
 
 #### TrueNAS Classes (Unchanged)
+
 ```yaml
+
 # For large media storage
+
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -505,9 +566,10 @@ parameters:
   fsType: nfs
   datasetParentName: tank/k8s-media
   datasetEnableQuotas: "false"  # No quotas for media
-  
+
 # For databases requiring performance
-apiVersion: storage.k8s.io/v1  
+
+apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: truenas-db-iscsi
@@ -520,8 +582,11 @@ parameters:
 ```
 
 #### Updated Longhorn Classes
+
 ```yaml
+
 # Primary class for HA configs with cross-host replication
+
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -530,8 +595,9 @@ provisioner: driver.longhorn.io
 parameters:
   numberOfReplicas: "3"
   dataLocality: "best-effort"
-  
+
 # Backup target storage (single replica on backup node)
+
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -547,35 +613,48 @@ parameters:
 ### Backup Implementation
 
 #### Level 1: VM Backups (Dell Mini PC)
+
 ```yaml
+
 # Proxmox Backup Server on Dell Mini PC
+
 Schedule:
+
   - Daily: Control plane VMs
-  - Weekly: Worker VMs  
+  - Weekly: Worker VMs
   - Daily: TrueNAS VM
+
 Storage: 120GB M.2 + 240GB SATA (360GB total)
 Retention: 7 daily, 4 weekly, 3 monthly
 ```
 
 #### Level 2: Application Data (4x2TB Backup Array)
+
 ```yaml
+
 # On backup NAS or second mini PC
+
 ZFS Replication:
+
   - Source: TrueNAS tank/k8s-* datasets
   - Target: backup-pool/replicated/k8s-*
   - Schedule: Every 4 hours for critical, daily for media
-  
+
 Longhorn Backups:
+
   - Target: NFS share on backup array
   - Schedule: Daily for all PVCs
   - Retention: 14 daily, 8 weekly
 ```
 
 #### Level 3: GitOps Configuration
+
 ```yaml
+
 # Everything in Git
+
 - K8s manifests: Git repository
-- Helm charts: Git repository  
+- Helm charts: Git repository
 - Ansible playbooks: Git repository
 - Backup verification: Automated testing scripts
 ```
@@ -583,6 +662,7 @@ Longhorn Backups:
 ### Flexible Implementation Timeline
 
 #### Phase 1: Basic Infrastructure (Initial Weekend)
+
 ```yaml
 - Install Proxmox on both servers
 - Set up TrueNAS VM on Server 1 (8GB RAM initially)
@@ -591,6 +671,7 @@ Longhorn Backups:
 ```
 
 #### Phase 2: K8s Foundation (Next Available Weekend)
+
 ```yaml
 - Set up first control+worker node (k3s-node-1)
 - Install k3s with embedded etcd
@@ -599,6 +680,7 @@ Longhorn Backups:
 ```
 
 #### Phase 3: Cluster Expansion (Incremental - as time permits)
+
 ```yaml
 - Add remaining nodes one at a time
 - Deploy Longhorn for distributed storage
@@ -607,14 +689,16 @@ Longhorn Backups:
 ```
 
 #### Phase 4: Application Migration (Gradual - one app at a time)
+
 ```yaml
 - Start with non-critical apps (Dashy, monitoring)
-- Migrate databases (BookStack, Monica) 
+- Migrate databases (BookStack, Monica)
 - Deploy media stack (Jellyfin, Radarr, Sonarr) on compute node
 - Migrate remaining applications as time allows
 ```
 
 #### Phase 5: Optimization & Hardening (Ongoing)
+
 ```yaml
 - Configure backup systems (Dell mini PC)
 - Test disaster recovery procedures
@@ -625,8 +709,10 @@ Longhorn Backups:
 ### Revised Resource Utilization Summary
 
 #### Current Hardware Allocation
+
 ```yaml
 Server 1 (65GB RAM total):
+
   - truenas-vm: 8GB RAM (start small, expand if needed)
   - k3s-node-1: 4GB RAM (control+worker)
   - k3s-node-2: 4GB RAM (control+worker)
@@ -635,6 +721,7 @@ Server 1 (65GB RAM total):
   - Available buffer: 33GB RAM (plenty of room to grow)
 
 Server 2 (16GB RAM total):
+
   - k3s-compute-node: 8GB RAM (RTX 3070, control+worker)
   - k3s-node-3: 4GB RAM (control+worker)
   - Proxmox overhead: ~2GB RAM
@@ -642,6 +729,7 @@ Server 2 (16GB RAM total):
   - Recommendation: Upgrade to 32GB when convenient (~$100)
 
 Mini PCs (Efficient utilization):
+
   - Lenovo: 10GB for k3s-node-4 (control+worker)
   - Dell: 12GB for k3s-node-5 (control+worker + backup services)
 ```

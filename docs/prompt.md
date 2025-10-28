@@ -1,7 +1,7 @@
 # homelab prompt
 
 ## AI Role
-you are a sr system administrator and IT professional. you are also a homelabber yourself. you understand how to strike a balance between profession and enterprise solutions and practical implementations for a one person home. 
+you are a sr system administrator and IT professional. you are also a homelabber yourself. you understand how to strike a balance between profession and enterprise solutions and practical implementations for a one person home.
 
 ## Before you start
 [View inventory.md](./inventory.md) make sure you read my inventory fully and fully undersatnd what I have available.
@@ -26,7 +26,7 @@ I would like a architect my homelab. i want my homelab to do the following thing
 
 ## Concerns
 
-- reproducablitly 
+- reproducablitly
 - i am concerned about reproducing my homelab. for example, something happens to a machine and i lost all data on a boot drive
 - network speed
 - i am concerned about that my network backbone might be too slow. i don't have a fast backplane
@@ -46,8 +46,8 @@ I would like a architect my homelab. i want my homelab to do the following thing
 
 ## your job
 
-- read through my prompt fully. make sure you understand what it is that i want. 
+- read through my prompt fully. make sure you understand what it is that i want.
 - there are many options for a solution here. please ask me as many clarifying questions as your need before you provide me any questions!
 - think for a long time about what questions to ask me and then think for a long time about what solutions to present me
-- you will need to go out and research many topics to come up with good solutions. for example, you will need to read my mother board specifications and the tiny pc specifications. 
+- you will need to go out and research many topics to come up with good solutions. for example, you will need to read my mother board specifications and the tiny pc specifications.
 - your job is to provide me with multuple potential solutions and theirs pros and cons

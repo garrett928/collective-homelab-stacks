@@ -8,7 +8,7 @@ This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive mo
 - **External Access**: Only via Traefik reverse proxy
 - **Metrics Endpoints**:
   - Prometheus UI: `https://prometheus.ghart.space`
-  - Node Exporter metrics: `https://metrics.ghart.space/nodeexporter/metrics`  
+  - Node Exporter metrics: `https://metrics.ghart.space/nodeexporter/metrics`
   - cAdvisor metrics: `https://metrics.ghart.space/cadvisor/metrics`
 
 ## Security
