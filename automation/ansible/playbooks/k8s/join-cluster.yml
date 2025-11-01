@@ -2,10 +2,14 @@
 # Join nodes to existing k3s cluster
 # Usage: ansible-playbook -i inventories/homelab.yml playbooks/k8s/join-cluster.yml
 - name: Join k3s Cluster
-  hosts: k8s_nodes:!k8s_nodes[0]  # All nodes except the first one
+  hosts: k8s_nodes:!k8s_nodes[0] # All nodes except the first one
   become: yes
-  serial: 1  # Join one node at a time
-  
+  serial: 1 # Join one node at a time
+  vars:
+    # Get the first node's IP for the cluster URL
+    first_node_ip: "{{ hostvars[groups['k8s_nodes'][0]]['ansible_host'] }}"
+    k3s_config_dir: "/etc/rancher/k3s"
+
   tasks:
     - name: Check if k3s is already running on this node
       systemd:
@@ -15,35 +19,46 @@
 
     - name: Check if node is already joined
       stat:
-        path: "{{ k3s_config_dir }}/k3s.yaml"
+        path: "/etc/rancher/k3s/k3s.yaml"
       register: node_joined
 
     - name: Read k3s join information from local file
       local_action:
         module: slurp
-        src: "./k3s-join-info.txt"
+        src: "{{ playbook_dir }}/k3s-join-info.txt"
       register: join_info_raw
       when: not node_joined.stat.exists
 
-    - name: Parse join information
+    - name: Set join token from file
       set_fact:
-        k3s_server_url: "{{ join_info_raw.content | b64decode | regex_search('K3S_URL=(.+)', '\\1') | first }}"
-        k3s_join_token: "{{ join_info_raw.content | b64decode | regex_search('K3S_TOKEN=(.+)', '\\1') | first }}"
-      when: 
+        k3s_join_token: "{{ join_info_raw.content | b64decode | trim }}"
+      when:
         - not node_joined.stat.exists
         - join_info_raw is defined
+
+    - name: Set k3s server URL
+      set_fact:
+        k3s_server_url: "https://{{ first_node_ip }}:6443"
+      when: not node_joined.stat.exists
+
+    - name: Create k3s config directory
+      file:
+        path: "{{ k3s_config_dir }}"
+        state: directory
+        mode: "0755"
+      when: not node_joined.stat.exists
 
     - name: Create k3s config for joining node
       copy:
         content: |
-          # k3s agent/server configuration for joining
+          # k3s server configuration for joining cluster
           server: "{{ k3s_server_url }}"
           token: "{{ k3s_join_token }}"
           node-name: "{{ inventory_hostname }}"
-          # Make this node both server and agent (control+worker)
+          write-kubeconfig-mode: "644"
         dest: "{{ k3s_config_dir }}/config.yaml"
-        mode: '0644'
-      when: 
+        mode: "0644"
+      when:
         - not node_joined.stat.exists
         - k3s_server_url is defined
         - k3s_join_token is defined
@@ -54,18 +69,60 @@
         K3S_TOKEN="{{ k3s_join_token }}" \
         INSTALL_K3S_EXEC="server" \
         sh -c 'curl -sfL https://get.k3s.io | sh -'
-      when: 
+      when:
         - not node_joined.stat.exists
         - k3s_server_url is defined
         - k3s_join_token is defined
       register: k3s_join_result
+      ignore_errors: yes
 
-    - name: Wait for k3s to be ready on joined node
+    - name: Get k3s service status if join failed
+      shell: systemctl status k3s.service --no-pager -l
+      register: k3s_status
+      when: k3s_join_result is failed
+      ignore_errors: yes
+
+    - name: Get k3s service logs if join failed
+      shell: journalctl -xeu k3s.service --no-pager -n 100
+      register: k3s_logs
+      when: k3s_join_result is failed
+
+    - name: Display k3s service status
+      debug:
+        var: k3s_status.stdout_lines
+      when: k3s_join_result is failed
+
+    - name: Display k3s service logs
+      debug:
+        var: k3s_logs.stdout_lines
+      when: k3s_join_result is failed
+
+    - name: Fail if k3s join failed
+      fail:
+        msg: "K3s join failed. Check the status and logs above for details."
+      when: k3s_join_result is failed
+
+    - name: Wait for k3s service to be active
+      systemd:
+        name: k3s
+      register: k3s_service
+      until: k3s_service.status.ActiveState == "active"
+      retries: 30
+      delay: 10
+      when: k3s_join_result is changed
+
+    - name: Wait for k3s.yaml to be created
       wait_for:
-        port: 6443
-        host: "{{ ansible_default_ipv4.address }}"
+        path: "{{ k3s_config_dir }}/k3s.yaml"
         timeout: 300
       when: k3s_join_result is changed
+
+    # - name: Wait for k3s to be ready on joined node
+    #   wait_for:
+    #     port: 6443
+    #     host: "{{ ansible_default_ipv4.address }}"
+    #     timeout: 300
+    #   when: k3s_join_result is changed
 
     - name: Create .kube directory for user
       file:
@@ -73,7 +130,7 @@
         state: directory
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
-        mode: '0755'
+        mode: "0755"
       when: not node_joined.stat.exists
 
     - name: Copy k3s kubeconfig to user directory
@@ -82,14 +139,14 @@
         dest: "/home/{{ ansible_user }}/.kube/config"
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
-        mode: '0644'
+        mode: "0644"
         remote_src: yes
       when: not node_joined.stat.exists
 
     - name: Update kubeconfig server address for user
       replace:
         path: "/home/{{ ansible_user }}/.kube/config"
-        regexp: 'https://127.0.0.1:6443'
+        regexp: "https://127.0.0.1:6443"
         replace: "{{ k3s_server_url }}"
       when: not node_joined.stat.exists
 
@@ -106,10 +163,10 @@
           ================================
           k3s Node Join Complete!
           ================================
-          
+
           Node: {{ inventory_hostname }}
           Status: {{ node_ready.stdout }}
           Role: Server + Agent (Control+Worker)
           Cluster: {{ k3s_server_url }}
-          
+
           Node successfully joined the k3s cluster!
