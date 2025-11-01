@@ -8,21 +8,23 @@ all:
     #     pve-server1:
     #       ansible_host: 192.168.1.100  # placeholder
     #       ansible_user: root
-          
+
     # VMs that will become K8s nodes
     k8s_nodes:
       hosts:
         b8s-01:
           ansible_host: b8s-01
-          ansible_user: k8s-admin        
+          ansible_user: k8s-admin
           ansible_ssh_private_key_file: /Users/ghart/.ssh/ansible
         b8s-02:
           ansible_host: b8s-02
-          ansible_user: k8s-admin        
+          ansible_user: k8s-admin
           ansible_ssh_private_key_file: /Users/ghart/.ssh/ansible
         b8s-03:
           ansible_host: b8s-03
-          ansible_user: k8s-admin        
+          ansible_user: k8s-admin
           ansible_ssh_private_key_file: /Users/ghart/.ssh/ansible
-
-        
+        b8s-04:
+          ansible_host: b8s-04
+          ansible_user: k8s-admin
+          ansible_ssh_private_key_file: /Users/ghart/.ssh/ansible
