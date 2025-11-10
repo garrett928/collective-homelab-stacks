@@ -14,6 +14,7 @@ This Homer dashboard provides quick access to all homelab services:
 - **Radarr** - Movie collection manager
 - **Sonarr** - TV show collection manager
 - **Prowlarr** - Indexer manager for Radarr/Sonarr
+- **Bazarr** - Subtitle management for movies and TV shows
 - **Transmission** - BitTorrent download client (via VPN)
 
 ### Applications

@@ -214,6 +214,13 @@ data:
             tag: "media"
             url: "https://prowlarr.ghart.space"
             target: "_blank"
+
+          - name: "Bazarr"
+            logo: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/bazarr.png"
+            subtitle: "Subtitle Management"
+            tag: "media"
+            url: "https://bazarr.ghart.space"
+            target: "_blank"
             
           - name: "Transmission"
             logo: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/transmission.png"
