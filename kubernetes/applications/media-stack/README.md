@@ -1,6 +1,6 @@
 # Media Stack Deployment
 
-This directory contains Kubernetes manifests for deploying the Arr suite (Radarr, Sonarr, Prowlarr) and Transmission to my k3s cluster.
+This directory contains Kubernetes manifests for deploying the Arr suite (Radarr, Sonarr, Prowlarr, Bazarr) and Transmission to my k3s cluster.
 
 ## Directory Structure
 
@@ -10,6 +10,11 @@ media-stack/
 ├── namespace.yaml
 ├── media-storage-pvc.yaml
 ├── media-secrets-template.yaml
+├── bazarr/
+│   ├── bazarr-pvc.yaml
+│   ├── bazarr-deployment.yaml
+│   ├── bazarr-service.yaml
+│   └── bazarr-ingress.yaml
 ├── prowlarr/
 │   ├── prowlarr-pvc.yaml
 │   ├── prowlarr-deployment.yaml
@@ -34,6 +39,7 @@ media-stack/
 
 ## Applications Included
 
+- **Bazarr**: Subtitle management (bazarr.ghart.space)
 - **Prowlarr**: Indexer management (prowlarr.ghart.space)
 - **Radarr**: Movie management (radarr.ghart.space)
 - **Sonarr**: TV show management (sonarr.ghart.space)
@@ -87,9 +93,15 @@ The ArgoCD application is defined in `../argocd-apps/media-stack-app.yaml`. Argo
    - Use the credentials from your secret
    - Configure download directory to `/data/downloads/torrents`
 
-3. **Access Prowlarr** at https://prowlarr.ghart.space
-   - Configure your indexers
-   - Note the API key for connecting other services
+3. **Access Bazarr** at https://bazarr.ghart.space
+   - Go to Settings > Languages
+   - Configure your preferred subtitle languages
+   - Go to Settings > Radarr
+   - Add Radarr connection using URL: `http://radarr:7878`
+   - Enter Radarr API key
+   - Go to Settings > Sonarr
+   - Add Sonarr connection using URL: `http://sonarr:8989`
+   - Enter Sonarr API key
 
 4. **Access Radarr** at https://radarr.ghart.space
    - Go to Settings > Media Management
@@ -117,6 +129,7 @@ The ArgoCD application is defined in `../argocd-apps/media-stack-app.yaml`. Argo
 ## Network Communication
 
 All services communicate internally via Kubernetes services:
+- Bazarr: `bazarr:6767`
 - Prowlarr: `prowlarr:9696`
 - Transmission: `transmission:9091`
 - Radarr: `radarr:7878`
